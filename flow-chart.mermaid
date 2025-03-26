@@ -1,0 +1,28 @@
+flowchart TD
+    A[Start Learning Session] --> B[Gather All Materials]
+    B --> C[Open Grok AI Assistant]
+    C --> D[Copy & Paste Tutor Prompt]
+    D --> E[Watch Video Topic]
+    
+    E --> F{Confused about\nsomething?}
+    F -->|Yes| G[Pause Video]
+    G --> H[Ask Grok for Help]
+    H --> I[Return to Video]
+    I --> E
+    
+    F -->|No| J[Finish Video]
+    J --> K[Work Through Practice MCQs with Grok]
+    K --> L[Work Through FRQs with Grok]
+    L --> M[Review Session Summary from Grok]
+    M --> N[Move to Next Video Topic]
+    N --> E
+    
+    classDef blueBox fill:#d4f1f9,stroke:#05b2dc,stroke-width:2px;
+    classDef greenBox fill:#d8f3dc,stroke:#2d6a4f,stroke-width:2px;
+    classDef yellowBox fill:#fefae0,stroke:#bc6c25,stroke-width:2px;
+    classDef purpleBox fill:#e0c3fc,stroke:#7b2cbf,stroke-width:2px;
+    
+    class A,B,C,D blueBox;
+    class E,F,G,H,I yellowBox;
+    class J,K,L greenBox;
+    class M,N purpleBox;

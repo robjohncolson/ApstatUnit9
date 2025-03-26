@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AP Statistics Unit 8: Chi-Square Tests</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- React and ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Mermaid JS -->
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    
+    <style>
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            cursor: pointer;
+        }
+        .tab-button.active {
+            background-color: #f0f9ff;
+            border-bottom: 2px solid #3b82f6;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-600">AP Statistics Unit 8: Chi-Square Tests</h1>
+            <p class="text-gray-600 mt-2">Tools and guides to help you succeed in AP Statistics</p>
+        </header>
+        
+        <!-- Tab Navigation -->
+        <div class="flex mb-0 border-b border-gray-200">
+            <div id="tab-learning-flow" class="tab-button active">Learning Flow</div>
+            <div id="tab-flowchart" class="tab-button">Flowchart</div>
+            <div id="tab-grok-prompt" class="tab-button">Grok Prompt</div>
+            <div id="tab-study-materials" class="tab-button">Study Materials</div>
+        </div>
+        
+        <!-- Tab Content -->
+        <div class="bg-white rounded-b-lg shadow-md p-6">
+            <!-- Learning Flow Tab -->
+            <div id="content-learning-flow" class="tab-content active">
+                <div id="learning-flow-app"></div>
+            </div>
+            
+            <!-- Flowchart Tab -->
+            <div id="content-flowchart" class="tab-content">
+                <h2 class="text-xl font-bold mb-4">AP Statistics Learning Session Flowchart</h2>
+                <p class="mb-4 text-gray-600">This flowchart shows the recommended learning process using your AP Statistics resources.</p>
+                <div class="bg-gray-50 p-4 rounded-lg overflow-auto max-h-[80vh]">
+                    <div class="mermaid" id="flowchart"></div>
+                </div>
+                <div class="mt-4 grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
+                    <div class="p-2 rounded bg-blue-100 text-blue-800">Blue: Setup</div>
+                    <div class="p-2 rounded bg-yellow-100 text-yellow-800">Yellow: Video Learning</div>
+                    <div class="p-2 rounded bg-green-100 text-green-800">Green: Practice</div>
+                    <div class="p-2 rounded bg-purple-100 text-purple-800">Purple: Progress</div>
+                    <div class="p-2 rounded bg-red-100 text-red-800">Red: Capstone</div>
+                </div>
+            </div>
+            
+            <!-- Grok Prompt Tab -->
+            <div id="content-grok-prompt" class="tab-content p-6">
+                <h2 class="text-2xl font-bold mb-4 text-center text-indigo-900">Start Your Grok Session</h2>
+                <div class="text-xs text-gray-600 mb-4">
+                    <span class="bg-green-100 text-green-800 px-1 rounded mr-1">(+)</span> 
+                    Videos marked with this symbol have a Google Drive backup available if AP Classroom is down. Hover over the icon for details.
+                </div>
+                <div class="grid md:grid-cols-2 gap-6">
+                    <!-- Left Column: Prompt and Instructions -->
+                    <div class="bg-white rounded-lg shadow-md p-5">
+                        <h3 class="text-xl font-semibold mb-3 text-blue-800">1. Get the Prompt</h3>
+                        
+                        <div class="bg-blue-50 p-4 rounded-lg mb-4 border border-blue-200">
+                            <pre id="grok-prompt" class="whitespace-pre-wrap text-sm"></pre>
+                            <div class="flex mt-4 gap-3">
+                                <button id="copy-button" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy Prompt
+                                </button>
+                                <a href="https://grok.com" target="_blank" class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md flex items-center">
+                                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"></path>
+                                        <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"></path>
+                                    </svg>
+                                    Open Grok
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <h3 class="text-xl font-semibold mb-3 text-yellow-800">2. Video Learning Guide</h3>
+                        <ol class="space-y-3 list-decimal pl-6">
+                            <li class="text-gray-700">
+                                <span class="font-medium text-gray-900">Copy the prompt</span> using the button above
+                            </li>
+                            <li class="text-gray-700">
+                                <span class="font-medium text-gray-900">Open Grok</span> by clicking the button or visiting <a href="https://grok.com" target="_blank" class="text-blue-600 hover:underline">grok.com</a>
+                            </li>
+                            <li class="text-gray-700">
+                                <span class="font-medium text-gray-900">Start a new conversation</span> and paste the prompt
+                            </li>
+                            <li class="text-gray-700">
+                                <span class="font-medium text-gray-900">Download the PDFs</span> for your current topic (shown on the right)
+                            </li>
+                            <li class="text-gray-700">
+                                <span class="font-medium text-gray-900">Attach both PDFs</span> to your Grok conversation using the paperclip icon
+                            </li>
+                            <li class="text-gray-700">
+                                <span class="font-medium text-gray-900">Send your message</span> and start learning with Grok!
+                            </li>
+                        </ol>
+                        
+                        <div class="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-yellow-800 mb-2 flex items-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                                Need Help?
+                            </h4>
+                            <p class="text-yellow-700 text-sm">
+                                Watch our <a href="https://youtu.be/dQw4w9WgXcQ" target="_blank" class="text-blue-600 hover:underline">video tutorial</a> on using Grok with PDF attachments.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Column: Current Topic & Materials -->
+                    <div>
+                        <!-- Current Topic Box -->
+                        <div class="bg-white rounded-lg shadow-md p-5 mb-6">
+                            <h3 class="text-xl font-semibold mb-3 text-green-800" id="current-topic-header">3. Practice with Current Topic</h3>
+                            <div id="current-topic-info" class="mb-4">
+                                <!-- Populated by JavaScript -->
+                                <p class="text-gray-500">Loading current topic information...</p>
+                            </div>
+                            
+                            <button id="complete-current-topic-btn" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-md flex items-center justify-center">
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                Mark Current Topic as Completed
+                            </button>
+                        </div>
+                        
+                        <!-- All Topics Quick Access -->
+                        <div class="bg-white rounded-lg shadow-md p-5">
+                            <h3 class="text-xl font-semibold mb-3 text-purple-800 grok-prompt-topics-header">4. Track Your Progress</h3>
+                            <div id="quick-access-topics" class="grid grid-cols-2 gap-3">
+                                <!-- Populated by JavaScript -->
+                                <p class="text-gray-500 col-span-2">Loading topics...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Study Materials Tab -->
+            <div id="content-study-materials" class="tab-content">
+                <h2 class="text-2xl font-bold mb-4 text-center text-indigo-900">AP Statistics Study Materials</h2>
+                <p class="text-center mb-4">Select a topic to study. Download both PDFs and attach them to your Grok conversation.</p>
+                
+                <div class="text-xs text-gray-600 mb-4 text-center">
+                  <span class="bg-green-100 text-green-800 px-1 rounded mr-1">(+)</span> 
+                  Videos marked with this symbol have a Google Drive backup available if AP Classroom is down. Hover over the icon for details.
+                </div>
+
+                <!-- Grok Prompt CTA Banner -->
+                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-blue-800 mb-1">Try our improved Grok Prompt tab!</h3>
+                        <p class="text-blue-700 text-sm">We've updated the Grok Prompt tab with all these features in one place for a more streamlined experience.</p>
+                    </div>
+                    <button onclick="document.getElementById('tab-grok-prompt').click()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 whitespace-nowrap">
+                        Go to Grok Prompt
+                    </button>
+                </div>
+                
+                <div class="mb-4">
+                    <div class="flex items-center mb-2">
+                        <label for="topic-select" class="mr-2 font-medium text-purple-800">Track your progress:</label>
+                        <select id="topic-select" class="p-2 border rounded-md">
+                            <option value="">Select a topic...</option>
+                        </select>
+                    </div>
+                    <div id="progress-container" class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                        <div id="progress-bar" class="bg-purple-600 h-2.5 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- All Topics Completed Message -->
+                <div id="all-completed-container" class="hidden mb-6 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
+                    <h3 class="text-xl font-bold text-green-700 mb-2">🎉 Congratulations! 🎉</h3>
+                    <p class="text-green-700 mb-4">You've completed all Unit 8 topics including the capstone Progress Check!</p>
+                    <button id="reset-progress-btn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
+                        Reset Progress
+                    </button>
+                </div>
+                
+                <div id="topic-cards-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Topic cards will be dynamically inserted here -->
+                </div>
+                
+                <div id="next-topic-container" class="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg hidden">
+                    <h3 class="font-bold text-lg mb-2 text-purple-800">Ready for the next topic?</h3>
+                    <p class="mb-2 text-purple-700">Great job completing the current topic! Here's what to study next:</p>
+                    <div id="next-topic-card" class="p-4 bg-white rounded-lg shadow-md"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script>
+        // Flowchart Mermaid Definition
+        const flowchartDefinition = `flowchart TD
+    A[Start Learning Session] --> B[Gather All Materials]
+    B --> C[Open Grok AI Assistant]
+    C --> D[Copy & Paste Tutor Prompt]
+    D --> E[Open Study Materials Tab]
+    E --> F[Download Question & Answer PDFs]
+    F --> G[Attach PDFs to Grok Conversation]
+    G --> H["Watch Topic Video
+    (Look for (+) for videos with backups)"]
+    
+    H --> AP{AP Classroom\\nAvailable?}
+    AP -->|Yes| WA[Watch AP Classroom Video]
+    AP -->|No| WG["Use Google Drive Backup Video
+    (Hover over (+) for the link)"]
+    WA --> I{Confused about\\nsomething?}
+    WG --> I
+    
+    I -->|Yes| J[Pause Video]
+    J --> K[Ask Grok for Help]
+    K --> L[Return to Video]
+    L --> I
+    
+    I -->|No| M[Finish Video]
+    M --> N[Work Through Practice Problems with Grok]
+    N --> O{All Problems\\nCompleted?}
+    O -->|No| N
+    O -->|Yes| P[Mark Topic as Completed]
+    P --> Q{All Topics\\nCompleted?}
+    Q -->|No| R[Proceed to Next Topic]
+    R --> E
+    Q -->|Yes| S[Tackle Capstone Challenge]
+    
+    classDef blueBox fill:#d4f1f9,stroke:#05b2dc,stroke-width:2px;
+    classDef greenBox fill:#d8f3dc,stroke:#2d6a4f,stroke-width:2px;
+    classDef yellowBox fill:#fefae0,stroke:#bc6c25,stroke-width:2px;
+    classDef purpleBox fill:#e0c3fc,stroke:#7b2cbf,stroke-width:2px;
+    classDef redBox fill:#ffccd5,stroke:#d90429,stroke-width:2px;
+    
+    class A,B,C,D blueBox;
+    class E,F,G blueBox;
+    class H,AP,WA,WG,I,J,K,L yellowBox;
+    class M,N,O greenBox;
+    class P,Q,R purpleBox;
+    class S redBox;`;
+        
+        // Grok Prompt
+        const grokPrompt = `You are an expert AP Statistics tutor. I will provide you with AP Statistics questions, which could be either multiple choice (MCQ) or free response (FRQ). For each question, I will indicate the type (MCQ or FRQ). Your task is to guide me through the questions as follows:
+
+For MCQs:
+- Present the Question: Display the multiple choice question with all answer options (A, B, C, D, E).
+- Analyze My Answer: After I submit my answer:
+  - If Correct: Confirm that my answer is correct and proceed to the next question.
+  - If Incorrect: Identify my misconception and provide scaffolded guidance without revealing the answer.
+- Provide Context (If Needed): For incorrect answers, once I arrive at the correct answer, provide relevant context.
+- Summarize the Concept: Summarize the key concept being tested (only if I answered incorrectly).
+- Check for Questions: Ask if I have additional questions before moving on (only if I needed guidance).
+
+For FRQs:
+- Present the Question: Display the free response question.
+- Break It Down: Break down the question into smaller, scaffolded steps.
+- Request Responses: For each scaffolded question, ask me to provide a response.
+- Grade My Response: Evaluate my response based on the AP grading rubric.
+- Guide Me: If my response is lacking, offer hints to help me improve.
+- Ensure Perfection: Continue until I can provide a response that meets the rubric's requirements.
+- Summarize the Concepts: Once completed correctly, summarize the key concepts.
+- Check for Questions: Ask if I have additional questions before moving on.
+
+Throughout the Session:
+- Track Performance: Monitor my performance to provide personalized guidance.
+- Session Summary: At the end, summarize key concepts and suggest areas for additional practice.
+
+Thank you for helping me prepare for my AP Statistics exam!`;
+        
+        // Initialize Mermaid
+        mermaid.initialize({ 
+            startOnLoad: true, 
+            theme: 'default',
+            securityLevel: 'loose',
+            logLevel: 5,
+            flowchart: { 
+                useMaxWidth: true, 
+                htmlLabels: true,
+                curve: 'cardinal',
+                diagramPadding: 8,
+                nodeSpacing: 30,
+                rankSpacing: 50
+            }
+        });
+        
+        // Function to render the flowchart
+        function renderFlowchart() {
+            const container = document.getElementById('flowchart');
+            
+            // Remove all children and recreate the element
+            while (container.firstChild) {
+                container.removeChild(container.firstChild);
+            }
+            
+            // Force re-parsing by creating and appending a new pre element
+            const pre = document.createElement('pre');
+            pre.className = 'mermaid';
+            pre.textContent = flowchartDefinition;
+            container.appendChild(pre);
+            
+            // Completely reinitialize mermaid for proper rendering
+            try {
+                mermaid.contentLoaded();
+            } catch (e) {
+                console.error('Mermaid parsing error:', e);
+            }
+        }
+        
+        // Study Materials and PDF Organization
+        
+        // Define the PDF files and organize them by topic
+        const pdfFiles = [
+            {
+                id: "8-1",
+                name: "Topic 8.1",
+                description: "Introducing Statistics: Are My Results Unexpected?",
+                videoUrl: "https://apclassroom.collegeboard.org/d/ej0nzh9akp?sui=33,8",
+                altVideoUrl: "https://drive.google.com/file/d/1kw-NYDqOcOUP8zvAsSuzIfuQ9KXow99C/view?usp=drive_link",
+                completed: false
+            },
+            {
+                id: "8-2",
+                name: "Topic 8.2",
+                description: "Setting Up a Chi-Square Goodness of Fit Test",
+                questionPdf: "8-2_quiz.pdf",
+                answersPdf: "8-2_quiz_answer.pdf",
+                videoUrl: "https://apclassroom.collegeboard.org/d/y7ikpxw7jp?sui=33,8",
+                videoUrl2: "https://apclassroom.collegeboard.org/d/3uua57pe0x?sui=33,8",
+                videoUrl3: "https://apclassroom.collegeboard.org/d/z0hykwj3ge?sui=33,8",
+                altVideoUrl: "https://drive.google.com/file/d/1Aup8w5fYTy69zWogOdtsXCO6kl6UNCCT/view?usp=drive_link",
+                altVideoUrl2: "https://drive.google.com/file/d/1Y7lopnXRCIbckoMM9csk8h1uCixX3LKd/view?usp=drive_link",
+                altVideoUrl3: "https://drive.google.com/file/d/1FMDpI5aNP3UoB4YppkX3ba7llfvfhLba/view?usp=drive_link",
+                completed: false
+            },
+            {
+                id: "8-3",
+                name: "Topic 8.3",
+                description: "Carrying Out a Chi-Square Test for Goodness of Fit",
+                questionPdf: "8-3_quiz.pdf",
+                answersPdf: "8-3_quiz_answer.pdf",
+                videoUrl: "https://apclassroom.collegeboard.org/d/9fkzxeaa5b?sui=33,8",
+                videoUrl2: "https://apclassroom.collegeboard.org/d/1rm91jvq1n?sui=33,8",
+                videoUrl3: "https://apclassroom.collegeboard.org/d/nayiwphnlr?sui=33,8",
+                altVideoUrl: "https://drive.google.com/file/d/1NemHYSwgnig3l3FUeyDYcDdt80aIYfd4/view?usp=drive_link",
+                altVideoUrl2: "https://drive.google.com/file/d/1A3t8-9QW7ubguCrQdApGKf4GkZWb1qBi/view?usp=drive_link",
+                altVideoUrl3: "https://drive.google.com/file/d/1tqgSvs4IHjltdUWtH7WmyqbPWGCMMoXb/view?usp=drive_link",
+                completed: false
+            },
+            {
+                id: "8-4",
+                name: "Topic 8.4",
+                description: "Expected Counts in Two-Way Tables",
+                questionPdf: "8-4_quiz.pdf",
+                answersPdf: "8-4_quiz_answer.pdf",
+                videoUrl: "https://apclassroom.collegeboard.org/d/hmyh34raqt?sui=33,8",
+                altVideoUrl: "https://drive.google.com/file/d/16dgP2zYBVUN2qzFlGRXKZ5aqErJv8FyQ/view?usp=drive_link",
+                completed: false
+            },
+            {
+                id: "8-5",
+                name: "Topic 8.5",
+                description: "Setting Up a Chi-Square Test for Homogeneity or Independence",
+                questionPdf: "8-5_quiz.pdf",
+                answersPdf: "8-5_quiz_answer.pdf",
+                videoUrl: "https://apclassroom.collegeboard.org/d/0bnpabex6u?sui=33,8",
+                videoUrl2: "https://apclassroom.collegeboard.org/d/kqfcpu28su?sui=33,8",
+                altVideoUrl: "https://drive.google.com/file/d/1YHP2ipcZ5Vj35OVgZBYwExUjfU-yB2q1/view?usp=drive_link",
+                altVideoUrl2: "https://drive.google.com/file/d/1YHP2ipcZ5Vj35OVgZBYwExUjfU-yB2q1/view?usp=drive_link",
+                completed: false
+            },
+            {
+                id: "8-6",
+                name: "Topic 8.6",
+                description: "Carrying Out a Chi-Square Test for Homogeneity or Independence",
+                questionPdf: "8-6_quiz.pdf",
+                answersPdf: "8-6_quiz_answer.pdf",
+                videoUrl: "https://apclassroom.collegeboard.org/d/gp64nrb7vq?sui=33,8",
+                videoUrl2: "https://apclassroom.collegeboard.org/d/88cjo73k9v?sui=33,8", 
+                videoUrl3: "https://apclassroom.collegeboard.org/d/1ea6gxau2t?sui=33,8",
+                altVideoUrl: "https://drive.google.com/file/d/1DS_LxyMAABbjaN3VrMjBcDXy0PwbDaP3/view?usp=drive_link",
+                altVideoUrl2: "https://drive.google.com/file/d/1hm-K8vBzjXcx7hTdU2E8-0bIDhdUgiq_/view?usp=drive_link",
+                altVideoUrl3: "https://drive.google.com/file/d/1v9ENpspNX7MSsuE50ZXoQyizuGOJ35sp/view?usp=drive_link",
+                completed: false
+            },
+            {
+                id: "8-7",
+                name: "Topic 8.7",
+                description: "Skills Focus: Selecting an Appropriate Inference Procedure for Categorical Data",
+                videoUrl: "https://apclassroom.collegeboard.org/d/v3kuvm87ss?sui=33,8",
+                altVideoUrl: "https://drive.google.com/file/d/175SWda7WXUWkt1EbLLDOwKWD-4Gn8llx/view?usp=drive_link",
+                completed: false
+            },
+            {
+                id: "unit8-pc",
+                name: "Unit 8 Progress Check",
+                description: "CAPSTONE: Unit 8 Progress Check Assessment",
+                questionPdf: "8-PC_FRQ_quiz.pdf",
+                answersPdf: "8-PC_FRQ_answer.pdf",
+                questionPdf2: "8-PC_MCQ_A_answer.pdf",
+                questionPdf3: "8-PC_MCQ_B_answer.pdf",
+                isCapstone: true,
+                completed: false
+            }
+        ];
+        
+        // Function to create a topic card
+        function createTopicCard(topic, isNextTopic = false) {
+            const card = document.createElement('div');
+            
+            // Special styling for capstone topic
+            const isCapstone = topic.isCapstone === true;
+            
+            // Check if all topics before the capstone are completed
+            let allPreviousTopicsCompleted = true;
+            if (isCapstone) {
+                // Find the index of this capstone topic
+                const capstoneIndex = pdfFiles.findIndex(t => t.id === topic.id);
+                
+                // Check if all previous topics are completed
+                for (let i = 0; i < capstoneIndex; i++) {
+                    if (!pdfFiles[i].completed) {
+                        allPreviousTopicsCompleted = false;
+                        break;
+                    }
+                }
+            }
+            
+            // Different styling based on topic type and completion status
+            let cardClasses = 'p-4 rounded-lg shadow-md topic-card mb-2 ';
+            if (topic.completed) {
+                cardClasses += 'bg-green-50 border border-green-200';
+            } else if (isCapstone) {
+                cardClasses += 'bg-red-50 border border-red-200';
+            } else if (isNextTopic || topic.current) {
+                cardClasses += 'bg-blue-50 border border-blue-200';
+            } else {
+                cardClasses += 'bg-white';
+            }
+            
+            card.className = cardClasses;
+            card.id = `topic-card-${topic.id}`;
+            
+            // Status icon varies by completion and type
+            let statusIcon = '';
+            if (topic.completed) {
+                statusIcon = '<span class="text-green-500 mr-2">✓</span>';
+            } else if (isNextTopic || topic.current) {
+                statusIcon = '<span class="text-blue-500 mr-2">→</span>';
+            } else if (isCapstone) {
+                statusIcon = '<span class="text-red-500 mr-2">🏆</span>';
+            } else {
+                statusIcon = '<span class="text-gray-300 mr-2">○</span>';
+            }
+            
+            // Status badge text and style
+            let badgeClass = topic.completed 
+                ? 'bg-green-100 text-green-800' 
+                : isCapstone 
+                  ? 'bg-red-100 text-red-800'
+                  : isNextTopic || topic.current
+                  ? 'bg-blue-100 text-blue-800'
+                  : 'bg-gray-100 text-gray-800';
+            
+            let badgeText = topic.completed 
+                ? 'Completed' 
+                : isCapstone 
+                  ? 'Final Challenge'
+                  : isNextTopic || topic.current
+                  ? 'Current Focus'
+                  : 'Upcoming';
+            
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-3">
+                    <h3 class="font-bold text-lg">${statusIcon}${topic.name}</h3>
+                    <span class="px-2 py-1 text-xs rounded-full ${badgeClass}">
+                        ${badgeText}
+                    </span>
+                </div>
+                <p class="text-gray-700 mb-3">${topic.description}</p>
+                <div class="flex flex-col gap-2">
+                    ${topic.questionPdf ? `
+                    <a href="${topic.questionPdf}" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        ${isCapstone ? "FRQ Questions PDF" : "Download Questions PDF (for Grok)"}
+                    </a>
+                    ` : ''}
+                    ${topic.answersPdf ? `
+                    <a href="${topic.answersPdf}" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        ${isCapstone ? "FRQ Answers PDF" : "Download Answers PDF (for Grok)"}
+                    </a>
+                    ` : ''}
+                    ${topic.questionPdf2 ? `
+                    <a href="${topic.questionPdf2}" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        MCQ Part A PDF
+                    </a>
+                    ` : ''}
+                    ${topic.questionPdf3 ? `
+                    <a href="${topic.questionPdf3}" target="_blank" class="flex items-center text-blue-600 hover:text-blue-800">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                        </svg>
+                        MCQ Part B PDF
+                    </a>
+                    ` : ''}
+                    ${!topic.questionPdf && !topic.answersPdf ? `
+                    <div class="p-2 bg-blue-50 rounded text-blue-700 text-sm mb-2">
+                        <svg class="w-4 h-4 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        This topic has video content only (no practice PDFs)
+                    </div>
+                    ` : ''}
+                    ${topic.videoUrl ? `
+                    <a href="${topic.videoUrl}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 group relative">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                        </svg>
+                        Watch Topic Video ${topic.videoUrl2 || topic.videoUrl3 ? ' 1' : ''}
+                        ${topic.altVideoUrl ? `
+                        <span class="ml-1 text-xs bg-green-100 text-green-800 px-1 rounded">
+                            <svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </span>
+                        <span class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
+                            If AP Classroom is down, <a href="${topic.altVideoUrl}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
+                        </span>
+                        ` : ''}
+                    </a>
+                    ` : ''}
+                    ${!topic.videoUrl && topic.altVideoUrl ? `
+                    <a href="${topic.altVideoUrl}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                        </svg>
+                        Watch Topic Video ${topic.altVideoUrl2 || topic.altVideoUrl3 ? ' 1' : ''} (Google Drive)
+                    </a>
+                    ` : ''}
+                    ${topic.videoUrl2 ? `
+                    <a href="${topic.videoUrl2}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 group relative">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                        </svg>
+                        Watch Topic Video 2
+                        ${topic.altVideoUrl2 ? `
+                        <span class="ml-1 text-xs bg-green-100 text-green-800 px-1 rounded">
+                            <svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </span>
+                        <span class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
+                            If AP Classroom is down, <a href="${topic.altVideoUrl2}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
+                        </span>
+                        ` : ''}
+                    </a>
+                    ` : ''}
+                    ${!topic.videoUrl2 && topic.altVideoUrl2 ? `
+                    <a href="${topic.altVideoUrl2}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                        </svg>
+                        Watch Topic Video 2 (Google Drive)
+                    </a>
+                    ` : ''}
+                    ${topic.videoUrl3 ? `
+                    <a href="${topic.videoUrl3}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 group relative">
+                        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                        </svg>
+                        Watch Topic Video 3
+                        ${topic.altVideoUrl3 ? `
+                        <span class="ml-1 text-xs bg-green-100 text-green-800 px-1 rounded">
+                            <svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </span>
+                        <span class="absolute left-0 bottom-full mb-2 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
+                            If AP Classroom is down, <a href="${topic.altVideoUrl3}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
+                        </span>
+                        ` : ''}
+                    </a>
+                    ` : ''}
+                    ${!topic.videoUrl3 && topic.altVideoUrl3 ? `
+                    <a href="${topic.altVideoUrl3}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                        </svg>
+                        Watch Topic Video 3 (Google Drive)
+                    </a>
+                    ` : ''}
+                    
+                    ${isNextTopic || topic.current ? `
+                    <div class="mt-2 p-2 bg-blue-100 text-blue-800 text-sm rounded flex items-center">
+                        <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                        <span>This is your current focus topic</span>
+                    </div>
+                    ` : ''}
+                    ${isCapstone && !topic.completed ? `
+                    <div class="mt-2 p-2 bg-red-100 text-red-800 text-sm rounded">
+                        <strong>Capstone Challenge!</strong> Complete all previous topics before attempting this final challenge.
+                    </div>
+                    ` : ''}
+                    ${isCapstone && !allPreviousTopicsCompleted ? `
+                    <button 
+                        class="mt-2 px-3 py-1 text-sm bg-gray-400 text-white rounded cursor-not-allowed"
+                        disabled
+                    >
+                        Locked - Complete All Topics First
+                    </button>
+                    ` : !topic.completed ? `
+                    <button 
+                        class="mt-2 px-3 py-1 text-sm bg-purple-500 text-white rounded hover:bg-purple-600"
+                        onclick="markTopicAsCompleted('${topic.id}')"
+                    >
+                        Mark as Completed
+                    </button>
+                    ` : ''}
+                </div>
+            `;
+            
+            return card;
+        }
+        
+        // Add styling for the pulse animation and completed state
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+                70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+                100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+            }
+            
+            .pulse-animation {
+                animation: pulse 1s ease-in-out 2;
+            }
+            
+            .completed-state {
+                opacity: 0.8;
+                position: relative;
+            }
+            
+            .completed-state::after {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.05);
+                pointer-events: none;
+                z-index: 1;
+            }
+            
+            .completed-state .topic-card:not(.capstone-completed) {
+                filter: grayscale(50%);
+            }
+            
+            .capstone-highlight {
+                border: 2px solid #ef4444 !important;
+                box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.2), 0 2px 4px -1px rgba(239, 68, 68, 0.1) !important;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Function to check if all topics are completed
+        function checkAllTopicsCompleted() {
+            const allCompleted = pdfFiles.every(topic => topic.completed);
+            const completedContainer = document.getElementById('all-completed-container');
+            const topicCardsContainer = document.getElementById('topic-cards-container');
+            const studyMaterialsTab = document.getElementById('content-study-materials');
+            
+            if (allCompleted) {
+                // Show completion message
+                completedContainer.classList.remove('hidden');
+                
+                // Hide the next topic container
+                document.getElementById('next-topic-container').classList.add('hidden');
+                
+                // Add completed state styling to the cards container
+                topicCardsContainer.classList.add('completed-state');
+                
+                // Find the capstone topic card and highlight it
+                const capstoneCard = document.getElementById(`topic-card-exam-frq2`);
+                if (capstoneCard) {
+                    capstoneCard.classList.add('capstone-highlight');
+                }
+                
+                // Add a subtle completion state to the entire tab
+                studyMaterialsTab.classList.add('bg-green-50');
+            } else {
+                // Hide completion message
+                completedContainer.classList.add('hidden');
+                
+                // Remove completed state styling
+                topicCardsContainer.classList.remove('completed-state');
+                studyMaterialsTab.classList.remove('bg-green-50');
+                
+                // Remove capstone highlight
+                const capstoneCard = document.getElementById(`topic-card-exam-frq2`);
+                if (capstoneCard) {
+                    capstoneCard.classList.remove('capstone-highlight');
+                }
+            }
+            
+            return allCompleted;
+        }
+        
+        // Function to reset all progress
+        function resetProgress() {
+            // Confirm reset
+            if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
+                // Reset all topics to not completed
+                pdfFiles.forEach((topic, index) => {
+                    topic.completed = false;
+                    topic.current = index === 0; // Set first topic as current
+                });
+                
+                // Save to local storage
+                saveTopicProgress();
+                
+                // Reset section headers
+                const currentTopicHeader = document.getElementById('current-topic-header');
+                if (currentTopicHeader) {
+                    currentTopicHeader.textContent = '2. Get Your Current Topic Materials';
+                }
+                
+                const topicsHeader = document.querySelector('.grok-prompt-topics-header');
+                if (topicsHeader) {
+                    topicsHeader.textContent = 'Quick Access to All Topics';
+                }
+                
+                // Refresh the UI for both tabs
+                populateTopicCards(); // For study materials tab
+                updateCurrentTopicInfo(); // For grok prompt tab
+                populateQuickAccessTopics(); // For grok prompt tab
+                
+                // Hide completion message in study materials tab
+                document.getElementById('all-completed-container').classList.add('hidden');
+                
+                // Scroll to the first topic if on study materials tab
+                const firstCard = document.getElementById(`topic-card-${pdfFiles[0].id}`);
+                if (firstCard && document.getElementById('content-study-materials').classList.contains('active')) {
+                    firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+        
+        // Function to populate the topic cards
+        function populateTopicCards() {
+            const container = document.getElementById('topic-cards-container');
+            container.innerHTML = '';
+            
+            // Find the first incomplete topic
+            const nextIncompleteIndex = pdfFiles.findIndex(topic => !topic.completed);
+            
+            // Mark it as current unless all topics are completed
+            if (nextIncompleteIndex >= 0) {
+                pdfFiles.forEach((topic, index) => {
+                    topic.current = index === nextIncompleteIndex;
+                });
+            }
+            
+            // Populate the cards in the original order (sequential)
+            pdfFiles.forEach((topic, index) => {
+                const isNext = index === nextIncompleteIndex;
+                const card = createTopicCard(topic, isNext);
+                container.appendChild(card);
+            });
+            
+            updateProgressBar();
+            populateTopicSelect();
+            checkAllTopicsCompleted();
+        }
+        
+        // Function to populate the topic select dropdown
+        function populateTopicSelect() {
+            const select = document.getElementById('topic-select');
+            select.innerHTML = '<option value="">Select a topic...</option>';
+            
+            pdfFiles.forEach(topic => {
+                const option = document.createElement('option');
+                option.value = topic.id;
+                option.textContent = topic.name;
+                select.appendChild(option);
+            });
+            
+            // Add event listener to handle selection
+            select.addEventListener('change', function() {
+                const selectedTopicId = this.value;
+                if (!selectedTopicId) return;
+                
+                // Scroll to the selected topic card
+                const card = document.getElementById(`topic-card-${selectedTopicId}`);
+                if (card) {
+                    card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    card.classList.add('pulse-animation');
+                    setTimeout(() => {
+                        card.classList.remove('pulse-animation');
+                    }, 2000);
+                }
+            });
+        }
+        
+        // Function to mark a topic as completed
+        function markTopicAsCompleted(topicId) {
+            const topic = pdfFiles.find(t => t.id === topicId);
+            if (topic) {
+                topic.completed = true;
+                topic.current = false;
+                
+                // Automatically mark the next topic as current
+                const currentIndex = pdfFiles.findIndex(t => t.id === topicId);
+                if (currentIndex >= 0 && currentIndex < pdfFiles.length - 1) {
+                    const nextTopic = pdfFiles[currentIndex + 1];
+                    if (nextTopic) {
+                        nextTopic.current = true;
+                    }
+                }
+                
+                // Update local storage to persist completion status
+                saveTopicProgress();
+                
+                // Refresh the UI
+                populateTopicCards();
+                
+                // If a topic was completed, scroll to the next one
+                if (currentIndex < pdfFiles.length - 1) {
+                    const nextCard = document.getElementById(`topic-card-${pdfFiles[currentIndex + 1].id}`);
+                    if (nextCard) {
+                        setTimeout(() => {
+                            nextCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }, 100);
+                    }
+                }
+            }
+        }
+        
+        // Function to update the next topic section
+        function updateNextTopic() {
+            const nextTopicContainer = document.getElementById('next-topic-container');
+            const nextTopicCard = document.getElementById('next-topic-card');
+            
+            // Check if all topics are completed
+            if (checkAllTopicsCompleted()) {
+                nextTopicContainer.classList.add('hidden');
+                return;
+            }
+            
+            // Find the first incomplete topic
+            const nextIncompleteIndex = pdfFiles.findIndex(topic => !topic.completed);
+            
+            if (nextIncompleteIndex >= 0) {
+                nextTopicContainer.classList.remove('hidden');
+                nextTopicCard.innerHTML = '';
+                nextTopicCard.appendChild(createTopicCard(pdfFiles[nextIncompleteIndex], true));
+            } else {
+                nextTopicContainer.classList.add('hidden');
+            }
+        }
+        
+        // Function to update the progress bar
+        function updateProgressBar() {
+            const completedCount = pdfFiles.filter(topic => topic.completed).length;
+            const totalCount = pdfFiles.length;
+            const progressPercentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+            
+            const progressBar = document.getElementById('progress-bar');
+            progressBar.style.width = `${progressPercentage}%`;
+            
+            // Add text to the progress bar if it's big enough
+            if (progressPercentage > 10) {
+                progressBar.textContent = `${Math.round(progressPercentage)}% Complete`;
+            } else {
+                progressBar.textContent = '';
+            }
+        }
+        
+        // Function to save topic progress to local storage
+        function saveTopicProgress() {
+            const progress = pdfFiles.map(topic => ({
+                id: topic.id,
+                completed: topic.completed,
+                current: topic.current,
+                videoUrl: topic.videoUrl,
+                videoUrl2: topic.videoUrl2,
+                videoUrl3: topic.videoUrl3
+            }));
+            
+            localStorage.setItem('apStatsTopicProgress', JSON.stringify(progress));
+        }
+        
+        // Function to load topic progress from local storage
+        function loadTopicProgress() {
+            const savedProgress = localStorage.getItem('apStatsTopicProgress');
+            
+            if (savedProgress) {
+                const progress = JSON.parse(savedProgress);
+                
+                // Update the pdfFiles array with saved progress
+                progress.forEach(savedTopic => {
+                    const topic = pdfFiles.find(t => t.id === savedTopic.id);
+                    if (topic) {
+                        topic.completed = savedTopic.completed;
+                        topic.current = savedTopic.current;
+                        
+                        // Preserve video URLs if they exist
+                        if (savedTopic.videoUrl) {
+                            topic.videoUrl = savedTopic.videoUrl;
+                        }
+                        if (savedTopic.videoUrl2) {
+                            topic.videoUrl2 = savedTopic.videoUrl2;
+                        }
+                        if (savedTopic.videoUrl3) {
+                            topic.videoUrl3 = savedTopic.videoUrl3;
+                        }
+                    }
+                });
+            }
+        }
+        
+        // Document ready function
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set Grok prompt content
+            document.getElementById('grok-prompt').textContent = grokPrompt;
+            
+            // Tab Switching Logic
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    // Update active tab button
+                    document.querySelectorAll('.tab-button').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    button.classList.add('active');
+                    
+                    // Update active content
+                    const contentId = button.id.replace('tab-', 'content-');
+                    document.querySelectorAll('.tab-content').forEach(content => {
+                        content.classList.remove('active');
+                    });
+                    document.getElementById(contentId).classList.add('active');
+                    
+                    // Always render mermaid chart if flowchart tab, whether it was previously active or not
+                    if (button.id === 'tab-flowchart') {
+                        // Small delay to ensure the tab content is visible before rendering
+                        setTimeout(renderFlowchart, 50);
+                    }
+                    
+                    // Initialize topic cards if study materials tab
+                    if (button.id === 'tab-study-materials') {
+                        loadTopicProgress();
+                        populateTopicCards();
+                    }
+                    
+                    // Update current topic info and quick access topics if grok prompt tab
+                    if (button.id === 'tab-grok-prompt') {
+                        loadTopicProgress();
+                        updateCurrentTopicInfo();
+                        populateQuickAccessTopics();
+                    }
+                });
+            });
+            
+            // Copy to clipboard functionality
+            document.getElementById('copy-button').addEventListener('click', () => {
+                const promptText = document.getElementById('grok-prompt').textContent;
+                const button = document.getElementById('copy-button');
+                
+                // Show loading state
+                button.innerHTML = `
+                    <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Copying...
+                `;
+                
+                // Use the Clipboard API with fallback methods
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    // Modern browsers
+                    navigator.clipboard.writeText(promptText)
+                        .then(() => {
+                            button.innerHTML = `
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                Copied!
+                            `;
+                            button.classList.add('bg-green-500');
+                            button.classList.remove('bg-blue-500');
+                            
+                            setTimeout(() => {
+                                button.innerHTML = `
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy Prompt
+                                `;
+                                button.classList.add('bg-blue-500');
+                                button.classList.remove('bg-green-500');
+                            }, 2000);
+                        })
+                        .catch(err => {
+                            console.error('Failed to copy text: ', err);
+                            button.innerHTML = `
+                                <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 01-1-1V9a1 1 0 012 0v4a1 1 0 01-1 1zm0-8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                                </svg>
+                                Failed to copy
+                            `;
+                            button.classList.add('bg-red-500');
+                            button.classList.remove('bg-blue-500');
+                            
+                            setTimeout(() => {
+                                button.innerHTML = `
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Copy Prompt
+                                `;
+                                button.classList.add('bg-blue-500');
+                                button.classList.remove('bg-red-500');
+                            }, 2000);
+                            
+                            alert('Failed to copy to clipboard. Please select and copy the text manually.');
+                        });
+                } else {
+                    // Fallback for older browsers
+                    try {
+                        // Create a temporary textarea element
+                        const textarea = document.createElement('textarea');
+                        textarea.value = promptText;
+                        textarea.setAttribute('readonly', '');
+                        textarea.style.position = 'absolute';
+                        textarea.style.left = '-9999px';
+                        document.body.appendChild(textarea);
+                        
+                        // Select and copy the text
+                        textarea.select();
+                        document.execCommand('copy');
+                        
+                        // Remove the textarea
+                        document.body.removeChild(textarea);
+                        
+                        // Update button styles
+                        button.innerHTML = `
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                            </svg>
+                            Copied!
+                        `;
+                        button.classList.add('bg-green-500');
+                        button.classList.remove('bg-blue-500');
+                        
+                        setTimeout(() => {
+                            button.innerHTML = `
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                Copy Prompt
+                            `;
+                            button.classList.add('bg-blue-500');
+                            button.classList.remove('bg-green-500');
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy text: ', err);
+                        button.innerHTML = `
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 01-1-1V9a1 1 0 012 0v4a1 1 0 01-1 1zm0-8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"></path>
+                            </svg>
+                            Failed to copy
+                        `;
+                        button.classList.add('bg-red-500');
+                        button.classList.remove('bg-blue-500');
+                        
+                        setTimeout(() => {
+                            button.innerHTML = `
+                                <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                Copy Prompt
+                            `;
+                            button.classList.add('bg-blue-500');
+                            button.classList.remove('bg-red-500');
+                        }, 2000);
+                        
+                        alert('Failed to copy to clipboard. Please select and copy the text manually.');
+                    }
+                }
+            });
+            
+            // Reset progress button functionality
+            document.getElementById('reset-progress-btn').addEventListener('click', resetProgress);
+            
+            // Auto-render flowchart if that tab is initially selected
+            if (document.getElementById('tab-flowchart').classList.contains('active')) {
+                renderFlowchart();
+            }
+            
+            // Initialize study materials if that tab is initially selected
+            if (document.getElementById('tab-study-materials').classList.contains('active')) {
+                loadTopicProgress();
+                populateTopicCards();
+            }
+            
+            // Initialize grok prompt tab if that tab is initially selected
+            if (document.getElementById('tab-grok-prompt').classList.contains('active')) {
+                loadTopicProgress();
+                updateCurrentTopicInfo();
+                populateQuickAccessTopics();
+            }
+        });
+        
+        // Function to update current topic info in the Grok Prompt tab
+        function updateCurrentTopicInfo() {
+            const currentTopicInfo = document.getElementById('current-topic-info');
+            if (!currentTopicInfo) return;
+            
+            // Find the current topic
+            loadTopicProgress();
+            
+            // Check if all topics are completed
+            const allCompleted = pdfFiles.every(topic => topic.completed);
+            
+            if (allCompleted) {
+                // Update the section header
+                const currentTopicHeader = document.getElementById('current-topic-header');
+                if (currentTopicHeader) {
+                    currentTopicHeader.textContent = '2. Congratulations!';
+                }
+                
+                // Show completion message
+                currentTopicInfo.innerHTML = `
+                    <div class="text-center p-4">
+                        <div class="text-green-500 text-5xl mb-4">🎉</div>
+                        <h4 class="font-bold text-xl text-green-700 mb-2">All Topics Completed!</h4>
+                        <p class="text-green-600 mb-4">Congratulations! You've completed all AP Statistics topics.</p>
+                    </div>
+                `;
+                
+                // Update the complete button to be a reset button
+                const completeButton = document.getElementById('complete-current-topic-btn');
+                if (completeButton) {
+                    completeButton.className = "w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md flex items-center justify-center";
+                    completeButton.disabled = false;
+                    completeButton.innerHTML = `
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                        </svg>
+                        Reset Progress
+                    `;
+                    
+                    // Remove any existing event listeners by cloning and replacing the button
+                    const newButton = completeButton.cloneNode(true);
+                    completeButton.parentNode.replaceChild(newButton, completeButton);
+                    
+                    // Add click event listener for reset with callback to refresh the UI
+                    newButton.addEventListener('click', function() {
+                        // Just call resetProgress once, which now handles all UI updates
+                        resetProgress();
+                    });
+                }
+                
+                return;
+            }
+            
+            const currentTopic = pdfFiles.find(topic => topic.current) || pdfFiles[0];
+            
+            if (currentTopic) {
+                let statusBadge = '';
+                if (currentTopic.completed) {
+                    statusBadge = '<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Completed</span>';
+                } else if (currentTopic.isCapstone) {
+                    statusBadge = '<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Capstone Challenge</span>';
+                } else {
+                    statusBadge = '<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Current Focus</span>';
+                }
+                
+                currentTopicInfo.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <h4 class="font-bold text-lg">${currentTopic.name}</h4>
+                        ${statusBadge}
+                    </div>
+                    <p class="text-gray-700 mb-3">${currentTopic.description}</p>
+                    <div class="flex flex-col gap-2">
+                        ${currentTopic.questionPdf ? `
+                        <a href="${currentTopic.questionPdf}" target="_blank" download class="flex items-center text-blue-600 hover:text-blue-800 bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            ${currentTopic.isCapstone ? "FRQ Questions PDF" : "Download Questions PDF"}
+                        </a>
+                        ` : ''}
+                        ${currentTopic.answersPdf ? `
+                        <a href="${currentTopic.answersPdf}" target="_blank" download class="flex items-center text-blue-600 hover:text-blue-800 bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            ${currentTopic.isCapstone ? "FRQ Answers PDF" : "Download Answers PDF"}
+                        </a>
+                        ` : ''}
+                        ${currentTopic.questionPdf2 ? `
+                        <a href="${currentTopic.questionPdf2}" target="_blank" download class="flex items-center text-blue-600 hover:text-blue-800 bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            MCQ Part A PDF
+                        </a>
+                        ` : ''}
+                        ${currentTopic.questionPdf3 ? `
+                        <a href="${currentTopic.questionPdf3}" target="_blank" download class="flex items-center text-blue-600 hover:text-blue-800 bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                            MCQ Part B PDF
+                        </a>
+                        ` : ''}
+                        ${!currentTopic.questionPdf && !currentTopic.answersPdf ? `
+                        <div class="p-2 bg-blue-50 rounded text-blue-700 text-sm mb-2">
+                            <svg class="w-5 h-5 inline-block mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            This topic has video content only (no practice PDFs)
+                        </div>
+                        ` : ''}
+                        ${currentTopic.videoUrl ? `
+                        <a href="${currentTopic.videoUrl}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50 group relative">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                            </svg>
+                            Watch Topic Video ${currentTopic.videoUrl2 || currentTopic.videoUrl3 ? ' 1' : ''}
+                            ${currentTopic.altVideoUrl ? `
+                            <span class="ml-1 text-xs bg-green-100 text-green-800 px-1 rounded flex-shrink-0">
+                                <svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                            <span class="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
+                                If AP Classroom is down, <a href="${currentTopic.altVideoUrl}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
+                            </span>
+                            ` : ''}
+                        </a>
+                        ` : ''}
+                        ${!currentTopic.videoUrl && currentTopic.altVideoUrl ? `
+                        <a href="${currentTopic.altVideoUrl}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                            </svg>
+                            Watch Topic Video ${currentTopic.altVideoUrl2 || currentTopic.altVideoUrl3 ? ' 1' : ''} (Google Drive)
+                        </a>
+                        ` : ''}
+                        ${currentTopic.videoUrl2 ? `
+                        <a href="${currentTopic.videoUrl2}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50 group relative">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                            </svg>
+                            Watch Topic Video 2
+                            ${currentTopic.altVideoUrl2 ? `
+                            <span class="ml-1 text-xs bg-green-100 text-green-800 px-1 rounded flex-shrink-0">
+                                <svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                            <span class="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
+                                If AP Classroom is down, <a href="${currentTopic.altVideoUrl2}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
+                            </span>
+                            ` : ''}
+                        </a>
+                        ` : ''}
+                        ${!currentTopic.videoUrl2 && currentTopic.altVideoUrl2 ? `
+                        <a href="${currentTopic.altVideoUrl2}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                            </svg>
+                            Watch Topic Video 2 (Google Drive)
+                        </a>
+                        ` : ''}
+                        ${currentTopic.videoUrl3 ? `
+                        <a href="${currentTopic.videoUrl3}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50 group relative">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                            </svg>
+                            Watch Topic Video 3
+                            ${currentTopic.altVideoUrl3 ? `
+                            <span class="ml-1 text-xs bg-green-100 text-green-800 px-1 rounded flex-shrink-0">
+                                <svg class="w-3 h-3 inline-block" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                </svg>
+                            </span>
+                            <span class="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
+                                If AP Classroom is down, <a href="${currentTopic.altVideoUrl3}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
+                            </span>
+                            ` : ''}
+                        </a>
+                        ` : ''}
+                        ${!currentTopic.videoUrl3 && currentTopic.altVideoUrl3 ? `
+                        <a href="${currentTopic.altVideoUrl3}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                            </svg>
+                            Watch Topic Video 3 (Google Drive)
+                        </a>
+                        ` : ''}
+                    </div>
+                `;
+            } else {
+                currentTopicInfo.innerHTML = '<p class="text-red-500">No current topic found. Please go to Study Materials and select a topic.</p>';
+            }
+            
+            // Update the complete button to handle the current topic
+            const completeButton = document.getElementById('complete-current-topic-btn');
+            if (completeButton && currentTopic) {
+                // Enable or disable button based on topic status
+                if (currentTopic.completed) {
+                    completeButton.classList.add('bg-gray-400');
+                    completeButton.classList.remove('bg-purple-500', 'hover:bg-purple-600');
+                    completeButton.disabled = true;
+                    completeButton.innerHTML = `
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Topic Already Completed
+                    `;
+                } else {
+                    completeButton.classList.add('bg-purple-500', 'hover:bg-purple-600');
+                    completeButton.classList.remove('bg-gray-400');
+                    completeButton.disabled = false;
+                    completeButton.innerHTML = `
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                        </svg>
+                        Mark Current Topic as Completed
+                    `;
+                }
+                
+                // Remove any existing event listeners by cloning and replacing the button
+                const newButton = completeButton.cloneNode(true);
+                completeButton.parentNode.replaceChild(newButton, completeButton);
+                
+                // Add click event listener with current topic ID
+                newButton.addEventListener('click', function() {
+                    if (!currentTopic.completed) {
+                        markTopicAsCompleted(currentTopic.id);
+                        
+                        // Update both the current topic info and quick access cards
+                        updateCurrentTopicInfo();
+                        populateQuickAccessTopics();
+                    }
+                });
+            }
+        }
+        
+        // Function to populate quick access topic cards in the Grok Prompt tab
+        function populateQuickAccessTopics() {
+            const container = document.getElementById('quick-access-topics');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            // Check if all topics are completed
+            const allCompleted = pdfFiles.every(topic => topic.completed);
+            
+            if (allCompleted) {
+                // Set a special header for completed state
+                container.innerHTML = `
+                    <div class="col-span-2 text-center mb-2">
+                        <div class="bg-green-100 text-green-800 text-sm py-2 px-4 rounded-full inline-block">
+                            <span class="mr-1">✓</span> All Topics Completed
+                        </div>
+                    </div>
+                `;
+                
+                // Add the capstone challenge at the top
+                const capstoneTopic = pdfFiles.find(topic => topic.isCapstone);
+                if (capstoneTopic) {
+                    const capstoneCard = document.createElement('div');
+                    capstoneCard.className = 'col-span-2 p-4 rounded-lg shadow-md bg-red-50 border border-red-200 capstone-highlight';
+                    
+                    capstoneCard.innerHTML = `
+                        <div class="flex justify-between items-start mb-2">
+                            <h4 class="font-bold text-lg"><span class="text-red-500 mr-1">🏆</span>${capstoneTopic.name}</h4>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Completed</span>
+                        </div>
+                        <p class="text-gray-700 mb-3">${capstoneTopic.description}</p>
+                        <div class="flex flex-wrap gap-2">
+                            <a href="${capstoneTopic.questionPdf}" target="_blank" download class="text-blue-600 hover:text-blue-800 text-sm bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    FRQ Questions PDF
+                                </span>
+                            </a>
+                            <a href="${capstoneTopic.answersPdf}" target="_blank" download class="text-blue-600 hover:text-blue-800 text-sm bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    FRQ Answers PDF
+                                </span>
+                            </a>
+                            ${capstoneTopic.questionPdf2 ? `
+                            <a href="${capstoneTopic.questionPdf2}" target="_blank" download class="text-blue-600 hover:text-blue-800 text-sm bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    MCQ Part A PDF
+                                </span>
+                            </a>
+                            ` : ''}
+                            ${capstoneTopic.questionPdf3 ? `
+                            <a href="${capstoneTopic.questionPdf3}" target="_blank" download class="text-blue-600 hover:text-blue-800 text-sm bg-white p-2 rounded border border-blue-200 hover:bg-blue-50">
+                                <span class="flex items-center">
+                                    <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    MCQ Part B PDF
+                                </span>
+                            </a>
+                            ` : ''}
+                        </div>
+                    `;
+                    
+                    container.appendChild(capstoneCard);
+                }
+            }
+            
+            // If not all completed or even after showing completed state, add the topic cards
+            pdfFiles.forEach(topic => {
+                // If all completed and this is the capstone, skip (we already added it above)
+                if (allCompleted && topic.isCapstone) return;
+                
+                const card = document.createElement('div');
+                card.className = `p-3 rounded-lg shadow-sm border ${topic.completed ? 'bg-green-50 border-green-200' : topic.isCapstone ? 'bg-red-50 border-red-200' : topic.current ? 'bg-blue-50 border-blue-200' : 'bg-white border-gray-200'} cursor-pointer hover:shadow-md transition-shadow`;
+                
+                let statusIcon = '';
+                if (topic.completed) {
+                    statusIcon = '<span class="text-green-500 mr-1">✓</span>';
+                } else if (topic.current) {
+                    statusIcon = '<span class="text-blue-500 mr-1">→</span>';
+                } else if (topic.isCapstone) {
+                    statusIcon = '<span class="text-red-500 mr-1">🏆</span>';
+                }
+                
+                card.innerHTML = `
+                    <div class="font-medium mb-2">${statusIcon}${topic.name}</div>
+                    <div class="flex flex-col gap-1 text-xs">
+                        ${topic.questionPdf ? `<a href="${topic.questionPdf}" target="_blank" download class="text-blue-600 hover:text-blue-800">${topic.isCapstone ? "FRQ Questions" : "Questions PDF"}</a>` : ''}
+                        ${topic.answersPdf ? `<a href="${topic.answersPdf}" target="_blank" download class="text-blue-600 hover:text-blue-800">${topic.isCapstone ? "FRQ Answers" : "Answers PDF"}</a>` : ''}
+                        ${topic.questionPdf2 ? `<a href="${topic.questionPdf2}" target="_blank" download class="text-blue-600 hover:text-blue-800">MCQ Part A</a>` : ''}
+                        ${topic.questionPdf3 ? `<a href="${topic.questionPdf3}" target="_blank" download class="text-blue-600 hover:text-blue-800">MCQ Part B</a>` : ''}
+                        ${!topic.questionPdf && !topic.answersPdf && !topic.questionPdf2 && !topic.questionPdf3 ? `<span class="text-blue-500 italic">Video content only</span>` : ''}
+                        ${topic.videoUrl ? `<a href="${topic.videoUrl}" target="_blank" class="text-yellow-600 hover:text-yellow-800">Video${topic.videoUrl2 || topic.videoUrl3 ? ' 1' : ''} ${topic.altVideoUrl ? '(+)' : ''}</a>` : ''}
+                        ${!topic.videoUrl && topic.altVideoUrl ? `<a href="${topic.altVideoUrl}" target="_blank" class="text-yellow-600 hover:text-yellow-800">Video${topic.altVideoUrl2 || topic.altVideoUrl3 ? ' 1' : ''}</a>` : ''}
+                        ${topic.videoUrl2 ? `<a href="${topic.videoUrl2}" target="_blank" class="text-yellow-600 hover:text-yellow-800">Video 2 ${topic.altVideoUrl2 ? '(+)' : ''}</a>` : ''}
+                        ${!topic.videoUrl2 && topic.altVideoUrl2 ? `<a href="${topic.altVideoUrl2}" target="_blank" class="text-yellow-600 hover:text-yellow-800">Video 2</a>` : ''}
+                        ${topic.videoUrl3 ? `<a href="${topic.videoUrl3}" target="_blank" class="text-yellow-600 hover:text-yellow-800">Video 3 ${topic.altVideoUrl3 ? '(+)' : ''}</a>` : ''}
+                        ${!topic.videoUrl3 && topic.altVideoUrl3 ? `<a href="${topic.altVideoUrl3}" target="_blank" class="text-yellow-600 hover:text-yellow-800">Video 3</a>` : ''}
+                    </div>
+                `;
+                
+                card.addEventListener('click', (e) => {
+                    // Don't trigger if clicking on a link
+                    if (e.target.tagName === 'A') return;
+                    
+                    // Set this topic as current
+                    pdfFiles.forEach(t => t.current = false);
+                    topic.current = true;
+                    saveTopicProgress();
+                    
+                    // Update UI
+                    updateCurrentTopicInfo();
+                    populateQuickAccessTopics();
+                });
+                
+                container.appendChild(card);
+            });
+            
+            // If all completed, update the title
+            if (allCompleted) {
+                const topicsHeader = document.querySelector('.grok-prompt-topics-header');
+                if (topicsHeader) {
+                    topicsHeader.textContent = 'Topic Review';
+                }
+            }
+        }
+        
+        // Function to set a topic as current
+        function setTopicAsCurrent(topicName) {
+            pdfFiles.forEach(topic => {
+                topic.current = (topic.name === topicName);
+            });
+            saveTopicProgress();
+            updateCurrentTopicInfo();
+            populateQuickAccessTopics();
+        }
+        
+        // Make the topic functions available globally
+        window.markTopicAsCompleted = markTopicAsCompleted;
+    </script>
+    
+    <!-- React Component -->
+    <script type="text/babel">
+        const APStatLearningFlow = () => {
+          const [currentStep, setCurrentStep] = React.useState(0);
+          
+          const steps = [
+            {
+              title: "1. Set Up",
+              icon: "📝",
+              content: "Gather all your materials before starting your AP Statistics learning session",
+              tips: ["Find a quiet place to focus", "Make sure your laptop is charged", "Have your calculator and formula sheet ready"],
+              color: "blue" // Setup color
+            },
+            {
+              title: "2. Prepare Grok",
+              icon: "🤖",
+              content: "Open Grok, set up the AI tutor, and download the corresponding PDFs from Study Materials",
+              tips: ["Copy the provided AP Statistics tutor prompt", "Attach both question and answer PDFs to your Grok conversation"],
+              color: "blue" // Setup color
+            },
+            {
+              title: "3. Watch Video",
+              icon: "📺",
+              content: "Actively watch the video lesson for your current topic",
+              tips: ["Take notes on paper", "Work through every example shown", "Videos are linked in the Study Materials tab", "Look for (+) icon for videos with backups", "Hover over the (+) icon if AP Classroom is down"],
+              color: "yellow" // Video learning color
+            },
+            {
+              title: "4. Ask Questions",
+              icon: "❓",
+              content: "If you get confused during the video, pause and ask Grok for help",
+              tips: ["Be specific about what confused you", "Return to the video once you understand"],
+              color: "yellow" // Video learning color
+            },
+            {
+              title: "5. Practice Problems",
+              icon: "🧩",
+              content: "After the video, use Grok to work through the practice problems",
+              tips: ["Grok will guide you through all questions", "Use the answer PDF to verify your work"],
+              color: "green" // Practice color
+            },
+            {
+              title: "6. Track Progress",
+              icon: "✅",
+              content: "Mark the topic as completed once you've mastered it",
+              tips: ["The next topic will automatically become your focus", "Complete all topics before attempting the capstone challenge"],
+              color: "purple" // Progress color
+            }
+          ];
+          
+          const handlePrev = () => {
+            setCurrentStep(prev => Math.max(0, prev - 1));
+          };
+          
+          const handleNext = () => {
+            setCurrentStep(prev => Math.min(steps.length - 1, prev + 1));
+          };
+          
+          // Get color classes based on step color
+          const getColorClasses = (stepColor) => {
+            switch(stepColor) {
+              case 'blue':
+                return { bg: 'bg-blue-100', text: 'text-blue-800', active: 'text-blue-600', button: 'bg-blue-500 hover:bg-blue-600' };
+              case 'yellow':
+                return { bg: 'bg-yellow-100', text: 'text-yellow-800', active: 'text-yellow-600', button: 'bg-yellow-500 hover:bg-yellow-600' };
+              case 'green':
+                return { bg: 'bg-green-100', text: 'text-green-800', active: 'text-green-600', button: 'bg-green-500 hover:bg-green-600' };
+              case 'purple':
+                return { bg: 'bg-purple-100', text: 'text-purple-800', active: 'text-purple-600', button: 'bg-purple-500 hover:bg-purple-600' };
+              case 'red':
+                return { bg: 'bg-red-100', text: 'text-red-800', active: 'text-red-600', button: 'bg-red-500 hover:bg-red-600' };
+              default:
+                return { bg: 'bg-gray-100', text: 'text-gray-800', active: 'text-gray-600', button: 'bg-gray-500 hover:bg-gray-600' };
+            }
+          };
+
+          return (
+            <div className="flex flex-col bg-gray-50 p-4 rounded-lg max-w-4xl mx-auto">
+              <h1 className="text-2xl font-bold text-center mb-6">AP Statistics: Using Grok to Help You Learn</h1>
+              
+              {/* Progress Tracker */}
+              <div className="flex flex-wrap justify-between mb-8">
+                {steps.map((step, idx) => {
+                  const colorClasses = getColorClasses(step.color);
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`flex flex-col items-center cursor-pointer mb-2 ${idx <= currentStep ? colorClasses.active : 'text-gray-400'}`}
+                      onClick={() => setCurrentStep(idx)}
+                    >
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center text-xl mb-2 ${idx <= currentStep ? colorClasses.bg : 'bg-gray-200'}`}>
+                        {step.icon}
+                      </div>
+                      <div className="text-xs font-medium text-center w-20">{step.title}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              {/* Step Content */}
+              <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h2 className="text-xl font-bold mb-4">{steps[currentStep].title}</h2>
+                <p className="mb-4">{steps[currentStep].content}</p>
+                
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <h3 className="font-bold text-blue-800 mb-2">Pro Tips:</h3>
+                  <ul className="list-disc pl-5">
+                    {steps[currentStep].tips.map((tip, idx) => (
+                      <li key={idx} className="mb-1">{tip}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              
+              {/* Materials List (visible on all screens) */}
+              <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+                <h3 className="font-bold mb-2">Materials Needed:</h3>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="flex items-center"><span className="mr-2">📄</span> Paper</div>
+                  <div className="flex items-center"><span className="mr-2">✏️</span> Pencil</div>
+                  <div className="flex items-center"><span className="mr-2">🧮</span> Calculator</div>
+                  <div className="flex items-center"><span className="mr-2">💻</span> Laptop</div>
+                  <div className="flex items-center"><span className="mr-2">🎧</span> Headphones (optional)</div>
+                  <div className="flex items-center"><span className="mr-2">📋</span> Clipboard</div>
+                  <div className="flex items-center"><span className="mr-2">📑</span> AP Exam Formula Sheet</div>
+                </div>
+              </div>
+              
+              {/* Navigation Buttons */}
+              <div className="flex justify-between">
+                <button 
+                  onClick={handlePrev} 
+                  className={`px-4 py-2 rounded-lg ${currentStep === 0 ? 'bg-gray-200 text-gray-500' : 'bg-blue-500 text-white'}`}
+                  disabled={currentStep === 0}
+                >
+                  Previous Step
+                </button>
+                <button 
+                  onClick={handleNext} 
+                  className={`px-4 py-2 rounded-lg ${currentStep === steps.length - 1 ? 'bg-gray-200 text-gray-500' : 'bg-blue-500 text-white'}`}
+                  disabled={currentStep === steps.length - 1}
+                >
+                  Next Step
+                </button>
+              </div>
+            </div>
+          );
+        };
+
+        // Render React component
+        ReactDOM.render(<APStatLearningFlow />, document.getElementById('learning-flow-app'));
+    </script>
+</body>
+</html> 
