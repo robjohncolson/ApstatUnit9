@@ -1,0 +1,301 @@
+{
+  "projectName": "AP Statistics Unit Learning Portal",
+  "version": "2.0.0",
+  "currentUnit": 9,
+  "previousUnit": 8,
+  "projectGoals": {
+    "primary": "Facilitate AP Statistics learning through structured unit progression",
+    "pedagogical": {
+      "core": [
+        "Guide students through topic-by-topic learning",
+        "Provide backup resources when AP Classroom is unavailable",
+        "Integrate AI tutoring through Grok"
+      ],
+      "methods": [
+        "Progressive topic unlocking",
+        "Multiple resource formats (video, PDF, AI)",
+        "Practice with immediate feedback",
+        "Self-paced progression"
+      ]
+    },
+    "technical": {
+      "core": [
+        "Maintain consistent resource organization across units",
+        "Ensure resource availability and verification",
+        "Track learning progress"
+      ],
+      "methods": [
+        "Standardized file naming",
+        "Resource status tracking",
+        "Local storage for progress persistence",
+        "URL validation and backup system"
+      ]
+    }
+  },
+  "constraints": {
+    "technical": [
+      "Must work with AP Classroom's URL structure",
+      "Must handle AP Classroom downtime gracefully",
+      "Must maintain PDF naming consistency",
+      "Must work without server-side components",
+      "Must function in standard web browsers"
+    ],
+    "educational": [
+      "Must follow AP Statistics curriculum order",
+      "Must provide both practice and solution materials",
+      "Must support both MCQ and FRQ formats",
+      "Must maintain academic integrity",
+      "Must accommodate different learning speeds"
+    ],
+    "resource": [
+      "Videos may become unavailable on AP Classroom",
+      "PDF materials must be properly renamed and organized",
+      "Google Drive backups must remain accessible",
+      "Materials must be kept current with curriculum updates"
+    ]
+  },
+  "successMetrics": {
+    "technical": {
+      "resourceAvailability": {
+        "description": "Percentage of resources available and verified",
+        "target": "≥ 98%",
+        "measurement": "Resource status tracking in urls.json"
+      },
+      "backupCoverage": {
+        "description": "Percentage of videos with working backup links",
+        "target": "100%",
+        "measurement": "Video backup status in urls.json"
+      },
+      "progressPersistence": {
+        "description": "Reliable storage of user progress",
+        "target": "Zero progress loss between sessions",
+        "measurement": "localStorage reliability"
+      }
+    },
+    "educational": {
+      "topicCompletion": {
+        "description": "Users completing all topics in sequence",
+        "target": "Complete unit coverage",
+        "measurement": "Progress tracking in localStorage"
+      },
+      "resourceAccess": {
+        "description": "Users able to access needed materials",
+        "target": "Zero blocked progress due to resource issues",
+        "measurement": "Resource availability tracking"
+      }
+    }
+  },
+  "crossUnitConsiderations": {
+    "consistency": {
+      "naming": "Maintain consistent file naming across units",
+      "structure": "Keep uniform topic organization",
+      "interaction": "Preserve user experience patterns"
+    },
+    "transitions": {
+      "process": "Documented in workflowForNewUnit",
+      "verification": "All resources validated before unit switch",
+      "userProgress": "Clear progress reset between units"
+    },
+    "maintenance": {
+      "regular": [
+        "URL verification",
+        "PDF accessibility checks",
+        "Progress tracking validation"
+      ],
+      "periodic": [
+        "Curriculum alignment check",
+        "Resource format updates",
+        "User experience evaluation"
+      ]
+    }
+  },
+  "scalingConsiderations": {
+    "otherSubjects": {
+      "potential": "Template could be adapted for other AP subjects",
+      "requirements": [
+        "Subject-specific topic structure",
+        "Appropriate resource organization",
+        "Modified validation rules"
+      ]
+    },
+    "multipleUnits": {
+      "simultaneous": "Could support multiple active units",
+      "requirements": [
+        "Enhanced progress tracking",
+        "Unit-specific resource management",
+        "Modified navigation structure"
+      ]
+    }
+  },
+  "validationRules": {
+    "fileNaming": {
+      "pdfs": {
+        "quiz": {
+          "pattern": "^[0-9]-[0-9]_quiz\\.pdf$",
+          "example": "9-1_quiz.pdf",
+          "description": "Unit-Topic_quiz.pdf format required"
+        },
+        "answer": {
+          "pattern": "^[0-9]-[0-9]_quiz_answer\\.pdf$",
+          "example": "9-1_quiz_answer.pdf",
+          "description": "Unit-Topic_quiz_answer.pdf format required"
+        },
+        "progressCheck": {
+          "pattern": "^[0-9]-PC_(FRQ|MCQ)_(quiz|answer|A|B)\\.pdf$",
+          "example": "9-PC_FRQ_quiz.pdf",
+          "description": "Unit-PC_Type_Category.pdf format required"
+        }
+      },
+      "directories": {
+        "pattern": "^unit[0-9]$",
+        "example": "unit9",
+        "description": "unitX format required"
+      }
+    },
+    "urlFormats": {
+      "apClassroom": {
+        "pattern": "^https://apclassroom\\.collegeboard\\.org/\\w+\\?sui=[0-9]+,[0-9]+$",
+        "example": "https://apclassroom.collegeboard.org/abc123?sui=33,9",
+        "description": "AP Classroom URL with valid suite ID"
+      },
+      "googleDrive": {
+        "pattern": "^https://drive\\.google\\.com/file/d/[\\w-]+/view\\?usp=drive_link$",
+        "example": "https://drive.google.com/file/d/abc123xyz/view?usp=drive_link",
+        "description": "Google Drive sharing URL with drive_link parameter"
+      }
+    }
+  },
+  "fileStructure": {
+    "index.html": {
+      "type": "file",
+      "purpose": "Main application file containing the complete web application",
+      "dependencies": [
+        "Tailwind CSS (CDN)",
+        "React (CDN)",
+        "ReactDOM (CDN)",
+        "Babel (CDN)",
+        "Mermaid JS (CDN)"
+      ],
+      "embeddedContent": [
+        "flowchartDefinition",
+        "grokPrompt",
+        "pdfFiles array"
+      ],
+      "features": [
+        "Learning flow visualization",
+        "Topic progress tracking",
+        "PDF and video resource management",
+        "Grok AI integration",
+        "Local storage persistence"
+      ],
+      "updateFrequency": "When changing units or adding features",
+      "status": "active"
+    },
+    "Index-reference-spec.gemini.json": {
+      "type": "file",
+      "purpose": "Technical documentation for index.html",
+      "relationship": "Documents the implementation details of index.html",
+      "updateFrequency": "When index.html changes significantly",
+      "status": "active"
+    },
+    "project-structure.json": {
+      "type": "file",
+      "purpose": "This file - Documents the project structure and relationships",
+      "relationship": "Meta-documentation of the entire project",
+      "updateFrequency": "When project structure changes",
+      "selfReference": true,
+      "status": "active"
+    },
+    "knowledge-tree.md": {
+      "type": "file",
+      "purpose": "Complete AP Statistics curriculum outline",
+      "relationship": "Provides context for unit implementation",
+      "updateFrequency": "When curriculum changes",
+      "status": "active"
+    },
+    "urls.json": {
+      "type": "file",
+      "purpose": "Centralized URL and resource management",
+      "structure": {
+        "topics": "Organized by topic number",
+        "videos": {
+          "apClassroom": "AP Classroom video URLs",
+          "backup": "Google Drive backup URLs"
+        },
+        "pdfs": "PDF file references",
+        "pdfRenames": "PDF renaming tracking",
+        "additionalResources": "Extra learning materials"
+      },
+      "updateFrequency": "When adding new resources or changing units",
+      "status": "active"
+    },
+    "pdfs/": {
+      "type": "directory",
+      "purpose": "Container for PDF resources",
+      "contents": {
+        "unit9/": {
+          "type": "directory",
+          "purpose": "Current unit PDF storage",
+          "expectedFiles": [
+            "9-*_quiz.pdf",
+            "9-*_quiz_answer.pdf",
+            "9-PC_*.pdf"
+          ],
+          "status": "awaiting_content"
+        }
+      },
+      "status": "active"
+    }
+  },
+  "workflowForNewUnit": {
+    "steps": [
+      "Update index.html title and content",
+      "Update pdfFiles array in index.html",
+      "Create new unit directory in pdfs/",
+      "Update urls.json with new unit structure",
+      "Transfer and rename PDFs to new unit directory",
+      "Update video URLs in urls.json",
+      "Test all functionality"
+    ]
+  },
+  "removedFiles": {
+    "flow-chart.mermaid": "Content embedded in index.html",
+    "grok-prompt.md": "Content embedded in index.html",
+    "AdditionalURLS.txt": "Consolidated into urls.json",
+    "pdfRename.txt": "Consolidated into urls.json",
+    "videoURLS.txt": "Consolidated into urls.json"
+  },
+  "changelog": [
+    {
+      "version": "2.1.0",
+      "date": "2024-03-29",
+      "changes": [
+        "Added comprehensive project goals",
+        "Added constraints documentation",
+        "Added success metrics",
+        "Added cross-unit considerations",
+        "Added scaling documentation"
+      ]
+    },
+    {
+      "version": "2.0.0",
+      "date": "2024-03-29",
+      "changes": [
+        "Consolidated URL management into urls.json",
+        "Removed separate URL tracking files",
+        "Added structured validation rules",
+        "Added status tracking",
+        "Transitioned from Unit 8 to Unit 9"
+      ]
+    },
+    {
+      "version": "1.0.0",
+      "date": "2024-03-26",
+      "changes": [
+        "Initial structured version",
+        "Unit 8 implementation",
+        "Basic file organization"
+      ]
+    }
+  ]
+} 

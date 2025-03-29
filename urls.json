@@ -1,0 +1,164 @@
+{
+  "unit9": {
+    "metadata": {
+      "lastUpdated": "2024-03-29",
+      "resourceStatus": {
+        "pdfs": {
+          "total": 0,
+          "uploaded": 0,
+          "verified": 0
+        },
+        "videos": {
+          "total": 0,
+          "apClassroom": 0,
+          "backups": 0,
+          "verified": 0
+        }
+      },
+      "topicStatus": {
+        "9.1": "awaiting_resources",
+        "9.2": "awaiting_resources",
+        "9.3": "awaiting_resources",
+        "9.4": "awaiting_resources",
+        "9.5": "awaiting_resources",
+        "9.6": "awaiting_resources",
+        "progressCheck": "awaiting_resources"
+      }
+    },
+    "topics": {
+      "9.1": {
+        "title": "Introducing Statistics: Do Those Points Align?",
+        "videos": {
+          "apClassroom": {
+            "url": "",
+            "status": "pending",
+            "lastVerified": null
+          },
+          "backup": {
+            "url": "",
+            "status": "pending",
+            "lastVerified": null
+          }
+        },
+        "pdfs": {}
+      },
+      "9.2": {
+        "title": "Confidence Intervals for the Slope of a Regression Model",
+        "videos": {
+          "apClassroom": {
+            "primary": "",
+            "additional1": "",
+            "additional2": ""
+          },
+          "backup": {
+            "primary": "",
+            "additional1": "",
+            "additional2": ""
+          }
+        },
+        "pdfs": {
+          "quiz": "9-2_quiz.pdf",
+          "answer": "9-2_quiz_answer.pdf"
+        }
+      },
+      "9.3": {
+        "title": "Justifying a Claim About the Slope of a Regression Model Based on a Confidence Interval",
+        "videos": {
+          "apClassroom": {
+            "primary": "",
+            "additional1": "",
+            "additional2": ""
+          },
+          "backup": {
+            "primary": "",
+            "additional1": "",
+            "additional2": ""
+          }
+        },
+        "pdfs": {
+          "quiz": "9-3_quiz.pdf",
+          "answer": "9-3_quiz_answer.pdf"
+        }
+      },
+      "9.4": {
+        "title": "Setting Up a Test for the Slope of a Regression Model",
+        "videos": {
+          "apClassroom": "",
+          "backup": ""
+        },
+        "pdfs": {
+          "quiz": "9-4_quiz.pdf",
+          "answer": "9-4_quiz_answer.pdf"
+        }
+      },
+      "9.5": {
+        "title": "Carrying Out a Test for the Slope of a Regression Model",
+        "videos": {
+          "apClassroom": {
+            "primary": "",
+            "additional1": ""
+          },
+          "backup": {
+            "primary": "",
+            "additional1": ""
+          }
+        },
+        "pdfs": {
+          "quiz": "9-5_quiz.pdf",
+          "answer": "9-5_quiz_answer.pdf"
+        }
+      },
+      "9.6": {
+        "title": "Skills Focus: Selecting an Appropriate Inference Procedure",
+        "videos": {
+          "apClassroom": "",
+          "backup": ""
+        },
+        "pdfs": {}
+      }
+    },
+    "progressCheck": {
+      "title": "Unit 9 Progress Check",
+      "pdfs": {
+        "frq_quiz": {
+          "filename": "9-PC_FRQ_quiz.pdf",
+          "status": "pending",
+          "lastVerified": null
+        },
+        "frq_answer": {
+          "filename": "9-PC_FRQ_answer.pdf",
+          "status": "pending",
+          "lastVerified": null
+        },
+        "mcq_a": {
+          "filename": "9-PC_MCQ_A_answer.pdf",
+          "status": "pending",
+          "lastVerified": null
+        },
+        "mcq_b": {
+          "filename": "9-PC_MCQ_B_answer.pdf",
+          "status": "pending",
+          "lastVerified": null
+        }
+      }
+    },
+    "pdfRenames": [
+      {
+        "original": "",
+        "new": "9-1_quiz.pdf",
+        "status": "pending",
+        "dateAdded": "2024-03-29"
+      }
+    ],
+    "additionalResources": [
+      {
+        "topic": "9.1",
+        "name": "",
+        "url": "",
+        "description": "",
+        "status": "pending",
+        "dateAdded": "2024-03-29"
+      }
+    ]
+  }
+} 
