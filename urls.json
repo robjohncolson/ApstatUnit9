@@ -83,12 +83,12 @@
         "pdfs": {
           "quiz": {
             "filename": "9-2_quiz.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "TB_ConfidenceIntervalsfortheSloperofaRegressionModelQuiz_67e8a6a61a7ee0.67e8a6a7541ea2.80393205.pdf"
           },
           "answer": {
             "filename": "9-2_quiz_answer.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "SG_ConfidenceIntervalsfortheSloperofaRegressionModelQuiz_67e8a6abaa95b6.67e8a6ad13ad46.56537573.pdf"
           }
         }
@@ -124,12 +124,12 @@
         "pdfs": {
           "quiz": {
             "filename": "9-3_quiz.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "TB_JustifyingaClaimAbouttheSlopeofaRegressionModelBasedonaConfidenceIntervalQuiz_67e8a92577243.67e8a926ab57f9.18235714.pdf"
           },
           "answer": {
             "filename": "9-3_quiz_answer.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "SG_JustifyingaClaimAbouttheSlopeofaRegressionModelBasedonaConfidenceIntervalQuiz_67e8a92a0a7897.67e8a92b6176a2.47032175.pdf"
           }
         }
@@ -165,12 +165,12 @@
         "pdfs": {
           "quiz": {
             "filename": "9-4_quiz.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "TB_SettingUpaTestfortheSlopeofaRegressionModelQuiz_67e8a9aa1d5966.67e8a9aba5b933.25605837.pdf"
           },
           "answer": {
             "filename": "9-4_quiz_answer.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "SG_SettingUpaTestfortheSlopeofaRegressionModelQuiz_67e8a9b1bdb9f1.67e8a9b365e9e7.36732185.pdf"
           }
         }
@@ -216,12 +216,12 @@
         "pdfs": {
           "quiz": {
             "filename": "9-5_quiz.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "TB_CarryingOutaTestfortheSlopeofaRegressionModelQuiz_67e8aa244ece12.67e8aa25b5ee29.99850359.pdf"
           },
           "answer": {
             "filename": "9-5_quiz_answer.pdf",
-            "status": "pending",
+            "status": "completed",
             "originalName": "SG_CarryingOutaTestfortheSlopeofaRegressionModelQuiz_67e8aa293e8650.67e8aa2ace9689.06781864.pdf"
           }
         }
@@ -248,22 +248,22 @@
       "pdfs": {
         "frq_quiz": {
           "filename": "9-PC_FRQ_quiz.pdf",
-          "status": "pending",
+          "status": "completed",
           "originalName": "TB_Unit9ProgressCheckFRQ_67e8b0c2e4ad46.67e8b0c3e15982.43829350.pdf"
         },
         "frq_answer": {
           "filename": "9-PC_FRQ_answer.pdf",
-          "status": "pending",
+          "status": "completed",
           "originalName": "SG_Unit9ProgressCheckFRQ_67e8b0c84db74971e5e0.69889308.pdf"
         },
         "mcq_a": {
           "filename": "9-PC_MCQ_A_answer.pdf",
-          "status": "pending",
+          "status": "completed",
           "originalName": "SG_Unit9ProgressCheckMCQPartA_67e8b089366e23.67e8b08aaa2d40.30052262.pdf"
         },
         "mcq_b": {
           "filename": "9-PC_MCQ_B_answer.pdf",
-          "status": "pending",
+          "status": "completed",
           "originalName": "SG_Unit9ProgressCheckMCQPartB_67e8b09cae2066.67e8b09ea733e8.96383957.pdf"
         }
       }
@@ -353,4 +353,4 @@
       }
     ]
   }
-} 
+}
