@@ -1,0 +1,133 @@
+{
+  "processName": "AP Statistics Unit Transition",
+  "version": "1.0.0",
+  "description": "Process documentation for transitioning the learning portal from one AP Statistics unit to another",
+  "prerequisites": {
+    "access": [
+      "AP Classroom account",
+      "Google Drive access",
+      "Local development environment"
+    ],
+    "files": [
+      "index.html",
+      "urls.json",
+      "project-structure.json"
+    ]
+  },
+  "steps": {
+    "1_preparation": {
+      "name": "Initial Setup",
+      "tasks": [
+        "Review knowledge-tree.md for new unit structure",
+        "Create pdfs/unitX directory",
+        "Update index.html title and header",
+        "Update pdfFiles array structure in index.html"
+      ]
+    },
+    "2_resource_collection": {
+      "name": "Collect Resources Topic by Topic",
+      "tasks": [
+        "For each topic in sequence:",
+        {
+          "videos": [
+            "Get AP Classroom video URLs",
+            "Get corresponding Google Drive backup URLs",
+            "Update urls.json with video information"
+          ],
+          "pdfs": [
+            "Download quiz PDFs from AP Classroom",
+            "Download answer PDFs from AP Classroom",
+            "Move PDFs to pdfs/unitX directory",
+            "Document original filenames in urls.json"
+          ]
+        },
+        "For Progress Check:",
+        {
+          "pdfs": [
+            "Download FRQ questions and answers",
+            "Download MCQ Part A and B",
+            "Move to pdfs/unitX directory",
+            "Document original filenames in urls.json"
+          ]
+        }
+      ]
+    },
+    "3_file_management": {
+      "name": "File Organization and Renaming",
+      "tasks": [
+        "Create PDF renaming mappings in urls.json",
+        "Run rename_pdfs.py script",
+        "Verify all files are correctly renamed",
+        "Update status fields in urls.json"
+      ]
+    },
+    "4_verification": {
+      "name": "Final Verification",
+      "tasks": [
+        "Verify all video URLs are accessible",
+        "Verify all PDFs are correctly named",
+        "Check all status fields are updated",
+        "Test topic progression in web interface"
+      ]
+    }
+  },
+  "fileNamingConventions": {
+    "topics": {
+      "quiz": "X-Y_quiz.pdf",
+      "answer": "X-Y_quiz_answer.pdf",
+      "description": "Where X is unit number, Y is topic number"
+    },
+    "progressCheck": {
+      "frq": {
+        "quiz": "X-PC_FRQ_quiz.pdf",
+        "answer": "X-PC_FRQ_answer.pdf"
+      },
+      "mcq": {
+        "partA": "X-PC_MCQ_A_answer.pdf",
+        "partB": "X-PC_MCQ_B_answer.pdf"
+      },
+      "description": "Where X is unit number"
+    }
+  },
+  "toolsUsed": {
+    "rename_pdfs.py": {
+      "purpose": "Rename PDFs using fuzzy matching",
+      "features": [
+        "Lists all PDFs in directory",
+        "Matches original names to target names",
+        "Confirms before renaming",
+        "Updates urls.json statuses"
+      ]
+    }
+  },
+  "commonIssues": {
+    "pdfNaming": {
+      "issue": "PDF filenames from AP Classroom may have slight variations",
+      "solution": "Use fuzzy matching in rename_pdfs.py"
+    },
+    "videoAccess": {
+      "issue": "AP Classroom videos may become inaccessible",
+      "solution": "Maintain Google Drive backups with documented URLs"
+    }
+  },
+  "validation": {
+    "resourceCounts": {
+      "description": "Expected number of resources per topic",
+      "standardTopic": {
+        "videos": "1-3 videos per topic",
+        "pdfs": "2 PDFs (quiz and answer) for most topics"
+      },
+      "progressCheck": {
+        "pdfs": "4 PDFs (FRQ quiz/answer, MCQ A/B)"
+      }
+    }
+  },
+  "bestPractices": [
+    "Process one topic at a time to maintain organization",
+    "Update urls.json immediately after collecting each resource",
+    "Verify video URLs work before documenting",
+    "Double-check PDF contents match intended topic",
+    "Use standardized naming conventions consistently",
+    "Maintain backup URLs for all videos"
+  ]
+} 
