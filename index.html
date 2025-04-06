@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AP Statistics Unit 9: Inference for Quantitative Data: Slopes</title>
-    
+    <title>AP Statistics Unit 8: Inference for Categorical Data: Chi-Square</title>
+
+    <!-- AP Statistics Data -->
+    <script src="js/allUnitsData.js"></script>    
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -17,6 +19,13 @@
     
     <!-- Mermaid JS -->
     <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    
+    <!-- Supabase JS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- QR Code Generator Library -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
     
     <style>
         .tab-content {
@@ -35,15 +44,29 @@
             border-bottom: 2px solid #3b82f6;
             font-weight: bold;
         }
+        
+        /* Style for when the daily quota is met */
+        body.quota-met-today::before {
+          content: "";
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background-color: rgba(220, 255, 220, 1); /* Light green tint, increased opacity */
+          z-index: -1; /* Place it behind most content */
+          pointer-events: none; /* Allow clicks to pass through */
+          transition: background-color 0.5s ease; /* Smooth transition */
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-8">
         <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-600">AP Statistics Unit 9: Inference for Quantitative Data: Slopes</h1>
+            <h1 class="text-3xl font-bold text-blue-600">AP Statistics Unit 8: Inference for Categorical Data: Chi-Square</h1>
             <p class="text-gray-600 mt-2">Tools and guides to help you succeed in AP Statistics</p>
             <div class="mt-2 bg-yellow-100 text-yellow-800 px-4 py-2 rounded-md inline-block">
-                <span class="font-semibold">Exam Weight:</span> Unit 9 represents 2-5% of the AP Statistics Exam
+                <span class="font-semibold">Exam Weight:</span> Unit 8 represents 2-5% of the AP Statistics Exam
             </div>
         </header>
         
@@ -53,6 +76,7 @@
             <div id="tab-flowchart" class="tab-button">Flowchart</div>
             <div id="tab-grok-prompt" class="tab-button">Grok Prompt</div>
             <div id="tab-study-materials" class="tab-button">Study Materials</div>
+            <div id="tab-overall-progress" class="tab-button">Overall Progress</div>
         </div>
         
         <!-- Tab Content -->
@@ -187,7 +211,7 @@
                 <!-- All Topics Completed Message -->
                 <div id="all-completed-container" class="hidden mb-6 p-6 bg-green-50 border border-green-200 rounded-lg text-center">
                     <h3 class="text-xl font-bold text-green-700 mb-2">🎉 Congratulations! 🎉</h3>
-                    <p class="text-green-700 mb-4">You've completed all Unit 9 topics including the capstone Progress Check!</p>
+                    <p class="text-green-700 mb-4">You've completed all Unit 8 topics including the capstone Progress Check!</p>
                     <button id="reset-progress-btn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600">
                         Reset Progress
                     </button>
@@ -226,11 +250,526 @@
                     <div id="next-topic-card" class="p-4 bg-white rounded-lg shadow-md"></div>
                 </div>
             </div>
+            
+            <!-- Overall Progress Tab -->
+            <div id="content-overall-progress" class="tab-content p-6">
+                <div id="overall-progress-loading" class="text-center text-gray-500">Loading overall progress...</div>
+                <div id="dot-plot-container" class="mb-6"></div>
+                <div id="remaining-items" class="mb-4 text-sm text-gray-700"></div>
+                <div id="flexible-quota" class="mb-4 text-sm text-gray-700"></div>
+                <div id="todays-quota-status" class="mb-6 text-sm text-gray-700"></div>
+                <div id="peer-quota-table-container" class="mt-6">
+                    <h3 class="text-lg font-semibold mb-2 text-indigo-800">Peer Quota Progress</h3>
+                    <div id="peer-quota-loading" class="text-gray-500">Loading peer data...</div>
+                    <div id="peer-quota-table"></div>
+                </div>
+            </div>
         </div>
     </div>
     
     <!-- Scripts -->
     <script>
+                // Function to check quota status and apply/remove visual indicator
+                async function updateQuotaMetVisualIndicator() {
+            console.log('DEBUG (VisualIndicator): Checking quota status for visual update...');
+            if (!currentUserId) {
+                console.log('DEBUG (VisualIndicator): No user ID, removing class.');
+                document.body.classList.remove('quota-met-today');
+                return;
+            }
+
+            // Get today's UTC date string
+            const todayUTC = new Date();
+            const todayDateString = new Date(Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), todayUTC.getUTCDate())).toISOString().split('T')[0];
+
+            try {
+                // Check if a record exists for this user and date in daily_quotas_met
+                // We only need to know if it exists, so maybeSingle() is efficient
+                const { data, error } = await supabaseClient
+                    .from('daily_quotas_met')
+                    .select('id') // Select a minimal column
+                    .eq('user_id', currentUserId)
+                    .eq('quota_date', todayDateString)
+                    .maybeSingle(); // Returns the record or null
+
+                if (error) {
+                    console.error('DEBUG (VisualIndicator): Error checking quota status:', error);
+                    document.body.classList.remove('quota-met-today'); // Remove on error
+                    return;
+                }
+
+                if (data) {
+                    // Record exists - quota met today
+                    console.log('DEBUG (VisualIndicator): Quota met, adding class.');
+                    document.body.classList.add('quota-met-today');
+                } else {
+                    // No record - quota not met today
+                    console.log('DEBUG (VisualIndicator): Quota not met, removing class.');
+                    document.body.classList.remove('quota-met-today');
+                }
+
+            } catch (err) {
+                console.error('DEBUG (VisualIndicator): Exception during quota check:', err);
+                document.body.classList.remove('quota-met-today'); // Remove on exception
+            }
+        }
+        // In Unit 1's index.html
+        const UNIT_ID = '8';
+        // Supabase initialization
+        const SUPABASE_URL = 'https://rmqetzxoqupnggltuzqf.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtcWV0enhvcXVwbmdnbHR1enFmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MjM2NzAsImV4cCI6MjA1OTI5OTY3MH0.9I56L1kC_4JJr_u9LuDgQ2ZV5C0y_-yic828UeCiuUk';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Global user variables
+        let currentUsername = null;
+        let currentUserId = null;
+        
+        // User identification function
+        async function identifyUser() {
+            // Step 1: Get values from localStorage
+            currentUsername = localStorage.getItem('apStatsUsername');
+            currentUserId = parseInt(localStorage.getItem('apStatsUserId'), 10) || null;
+            
+            // Step 2: Check if username is null or empty
+            if (!currentUsername) {
+                // Ask user for their username
+                const username = prompt("Enter your username (visible to others):");
+                
+                // If user cancels or enters nothing, return early
+                if (!username) {
+                    console.warn("User identification cancelled or empty username entered");
+                    return;
+                }
+                
+                // Store username and reset userId
+                localStorage.setItem('apStatsUsername', username);
+                currentUsername = username;
+                currentUserId = null;
+                localStorage.removeItem('apStatsUserId');
+            }
+            
+            // Step 3: Validate Existing User ID (if present)
+            if (currentUsername && currentUserId) {
+                try {
+                    // Check if the user ID exists in the database
+                    const { data: userCheck, error: checkError } = await supabaseClient
+                        .from('users')
+                        .select('id')
+                        .eq('id', currentUserId)
+                        .maybeSingle();
+                    
+                    if (checkError) {
+                        throw checkError;
+                    }
+                    
+                    if (!userCheck) {
+                        // User ID not found in database
+                        console.warn('User ID found in localStorage but not in DB. Attempting to recreate user.');
+                        currentUserId = null; // Force recreation logic below
+                        localStorage.removeItem('apStatsUserId'); // Remove the bad ID from storage
+                    } else {
+                        // User ID verified in database
+                        console.log(`User ID ${currentUserId} verified in DB for ${currentUsername}`);
+                    }
+                } catch (error) {
+                    console.error('Error validating user ID in DB:', error);
+                    currentUserId = null; // Set to null to be safe
+                    localStorage.removeItem('apStatsUserId');
+                }
+            }
+            
+            // Step 4: Look up/Create User (if needed)
+            if (currentUsername && !currentUserId) {
+                try {
+                    // Try to find existing user
+                    const result = await supabaseClient
+                        .from('users')
+                        .select('id')
+                        .eq('username', currentUsername)
+                        .maybeSingle();
+                    
+                    // Handle potential errors in the query itself
+                    if (result.error && result.error.message !== 'Row not found') {
+                        throw result.error;
+                    }
+                    
+                    // If user exists, store their ID
+                    if (result.data) {
+                        currentUserId = result.data.id;
+                    } else {
+                        // User not found, create new user
+                        const insertResult = await supabaseClient
+                            .from('users')
+                            .insert({ username: currentUsername })
+                            .select()
+                            .single();
+                        
+                        // Check for insert errors
+                        if (insertResult.error) {
+                            throw insertResult.error;
+                        }
+                        
+                        // Store the new user's ID
+                        currentUserId = insertResult.data.id;
+                    }
+                    
+                    // Save userId to localStorage if we have one
+                    if (currentUserId) {
+                        localStorage.setItem('apStatsUserId', currentUserId);
+                    }
+                    await updateQuotaMetVisualIndicator(); // Add this line]tVisualIndicator(); // Add this line
+                    console.log(`User identified: ${currentUsername} (ID: ${currentUserId})`);
+                    
+                } catch (error) {
+                    // Handle errors from Supabase
+                    console.error("Error connecting to database:", error);
+                    alert('Could not connect to online progress tracker. Progress will only be saved locally.');
+                    currentUserId = null;
+                }
+            }
+        }
+        
+        // Function to save completion data to Supabase
+        async function saveCompletionToSupabase(itemType, itemIdentifier, unitId) {
+            console.log('DEBUG: >>> Entering saveCompletionToSupabase. User ID:', currentUserId, 'Item:', itemType, 'ID:', itemIdentifier, 'Unit:', unitId);
+
+            // Re-verify User ID inside the function
+            if (!currentUserId) {
+                console.warn('DEBUG: >>> No user ID found inside saveCompletionToSupabase. Skipping Supabase save.');
+                return; // Exit if no user ID
+            }
+
+            // Prepare the data object
+            const completionData = {
+                user_id: currentUserId,
+                item_type: itemType,
+                item_identifier: itemIdentifier,
+                unit_id: unitId,
+                completed_at: new Date().toISOString()
+            };
+            console.log('DEBUG: >>> Preparing to insert this data:', completionData);
+
+            // Attempt the Supabase insert using the correct client variable name
+            try {
+                console.log('DEBUG: >>> Calling supabaseClient.from(\'completions\').insert()...'); // Use supabaseClient
+                const { data, error } = await supabaseClient // Use supabaseClient
+                    .from('completions')
+                    .insert(completionData);
+
+                // Log the raw response from Supabase
+                console.log('DEBUG: >>> Supabase insert response:', { data, error });
+
+                // Check specifically for an error object in the response
+                if (error) {
+                    console.error('DEBUG: >>> Supabase insert returned an error object:', error);
+                    // Do NOT call checkLocalQuota() if there was an error
+                } else {
+                    // If error is null, the operation was likely successful on Supabase's side
+                    console.log(`DEBUG: >>> Completion save to Supabase seems successful: ${itemType} - ${itemIdentifier}`);
+                    // Call the next step ONLY on success
+                    checkDailyQuotaCompletion(); // Moved inside the 'else' block
+                }
+
+            } catch (error) {
+                // Catch any network errors or errors thrown from the try block
+                console.error('DEBUG: >>> CATCH block: Error during Supabase insert attempt:', error);
+                
+                // Check if the error suggests a network problem
+                if (error.message && error.message.includes('Failed to fetch')) {
+                    console.log('DEBUG: Network error detected, queueing completion locally.');
+                    
+                    // Start a nested try/catch block for queueing logic
+                    try {
+                        // Get the current queue from localStorage
+                        let queue = JSON.parse(localStorage.getItem('offlineCompletionQueue') || '[]');
+                        
+                        // Add a unique timestamp to the completionData object
+                        completionData.queueTimestamp = Date.now();
+                        
+                        // Push the completionData object onto the queue array
+                        queue.push(completionData);
+                        
+                        // Save the updated queue back to localStorage
+                        localStorage.setItem('offlineCompletionQueue', JSON.stringify(queue));
+                        
+                        console.log('DEBUG: Successfully queued completion data for later sync.');
+                    } catch (queueError) {
+                        console.error('Failed to save completion to offline queue:', queueError);
+                    }
+                }
+            }
+            console.log('DEBUG: >>> Exiting saveCompletionToSupabase.');
+        }
+        
+        // Function to delete completion data from Supabase
+        async function deleteCompletionFromSupabase(itemType, itemIdentifier, unitId) {
+            // Re-verify User ID inside the function
+            if (!currentUserId) {
+                console.warn('DEBUG: No user ID found. Skipping Supabase deletion.');
+                return; // Exit if no user ID
+            }
+            
+            console.log(`DEBUG: Attempting to DELETE completion: User=${currentUserId}, Type=${itemType}, ID=${itemIdentifier}, Unit=${unitId}`);
+            
+            try {
+                const { error } = await supabaseClient
+                    .from('completions')
+                    .delete()
+                    .match({ 
+                        user_id: currentUserId, 
+                        item_type: itemType, 
+                        item_identifier: itemIdentifier, 
+                        unit_id: unitId 
+                    });
+                
+                if (error) {
+                    console.error('DEBUG: Error deleting completion:', error);
+                } else {
+                    console.log('DEBUG: Successfully deleted completion from Supabase.');
+                }
+            } catch (error) {
+                console.error('DEBUG: Exception while deleting completion from Supabase:', error);
+            }
+        }
+        
+        // Function to synchronize offline completion queue with Supabase
+        async function syncOfflineQueue() {
+            // Only run if we have a user ID and the browser thinks it's online
+            if (!currentUserId || !navigator.onLine) return;
+            
+            // Read the queue from localStorage
+            let queue = JSON.parse(localStorage.getItem('offlineCompletionQueue') || '[]');
+            
+            // If queue is empty, log and return
+            if (queue.length === 0) {
+                console.log("DEBUG: Offline queue is empty.");
+                return;
+            }
+            
+            // Log the sync attempt
+            console.log(`DEBUG: Attempting to sync ${queue.length} items from offline queue.`);
+            
+            // Array to track items that were successfully synced
+            let successfullySyncedTimestamps = [];
+            
+            // Process each item in the queue
+            for (const item of queue) {
+                try {
+                    // Log the individual sync attempt
+                    console.log("DEBUG: Attempting sync for item:", item);
+                    
+                    // Ensure user_id is current (safety check)
+                    item.user_id = currentUserId;
+                    
+                    // Attempt to insert the item into Supabase
+                    const { error } = await supabaseClient.from('completions').insert(item);
+                    
+                    // Check the response
+                    if (error) {
+                        // Log failure but leave item in queue
+                        console.warn("DEBUG: Failed to sync item from queue:", error, item);
+                    } else {
+                        // Log success and track item for removal
+                        console.log("DEBUG: Successfully synced item:", item);
+                        successfullySyncedTimestamps.push(item.queueTimestamp);
+                    }
+                } catch (syncError) {
+                    // Log error during sync attempt (item stays in queue)
+                    console.error("DEBUG: Error during individual queue item sync attempt:", syncError, item);
+                }
+            }
+            
+            // Filter the queue to remove successfully synced items
+            const newQueue = queue.filter(item => !successfullySyncedTimestamps.includes(item.queueTimestamp));
+            
+            // Save the updated queue back to localStorage
+            localStorage.setItem('offlineCompletionQueue', JSON.stringify(newQueue));
+            
+            // Log final status
+            console.log(`DEBUG: Offline queue sync complete. ${successfullySyncedTimestamps.length} items synced. ${newQueue.length} items remain.`);
+        }
+        
+        // Function to synchronize local storage progress with Supabase
+        async function syncLocalStorageToSupabase() {
+            // Initial checks
+            if (!currentUserId) {
+                console.log("DEBUG (LSSync): No user ID available. Skipping sync.");
+                return;
+            }
+            
+            if (!navigator.onLine) {
+                console.log("DEBUG (LSSync): Browser reports offline. Skipping sync.");
+                return;
+            }
+            
+            if (typeof ALL_UNITS_DATA === 'undefined') {
+                console.log("DEBUG (LSSync): ALL_UNITS_DATA not available. Skipping sync.");
+                return;
+            }
+            
+            console.log("DEBUG (LSSync): Starting sync from Local Storage to Supabase...");
+            
+            try {
+                // Fetch existing completions from Supabase
+                console.log("DEBUG (LSSync): Fetching existing completions from Supabase...");
+                const { data, error } = await supabaseClient
+                    .from('completions')
+                    .select('unit_id, item_identifier, item_type')
+                    .eq('user_id', currentUserId);
+                
+                if (error) {
+                    console.error("DEBUG (LSSync): Error fetching completions from Supabase:", error);
+                    return;
+                }
+                
+                // Create a Set of existing completion identifiers
+                const supabaseCompletionsSet = new Set();
+                if (data && Array.isArray(data)) {
+                    data.forEach(item => {
+                        const uniqueId = `${item.unit_id}_${item.item_type}_${item.item_identifier}`;
+                        supabaseCompletionsSet.add(uniqueId);
+                    });
+                }
+                
+                console.log(`DEBUG (LSSync): Found ${supabaseCompletionsSet.size} existing completions in Supabase.`);
+                
+                // Initialize counters
+                let itemsToUploadCount = 0;
+                let itemsSkippedCount = 0;
+                let itemsFailedCount = 0;
+                
+                // Iterate through all units
+                for (const unit of ALL_UNITS_DATA) {
+                    // Construct the localStorage key for this unit
+                    const unitNumber = unit.unitId.slice(-1); // Extract the number at the end of unitId
+                    const localKey = 'apStatsUnit' + unitNumber + 'Progress';
+                    
+                    console.log(`DEBUG (LSSync): Checking local storage for unit ${unit.unitId} with key ${localKey}`);
+                    
+                    // Try to get data from localStorage
+                    const localDataString = localStorage.getItem(localKey);
+                    
+                    if (localDataString) {
+                        try {
+                            // Parse the local data
+                            const localUnitProgress = JSON.parse(localDataString);
+                            
+                            if (Array.isArray(localUnitProgress)) {
+                                console.log(`DEBUG (LSSync): Found ${localUnitProgress.length} topics in local storage for unit ${unit.unitId}`);
+                                
+                                // Loop through each topic
+                                for (const topicProgress of localUnitProgress) {
+                                    // Check videos
+                                    if (topicProgress.videos && Array.isArray(topicProgress.videos)) {
+                                        for (const video of topicProgress.videos) {
+                                            if (video.completed === true) {
+                                                // Use primary URL if available, otherwise use alternate
+                                                const videoUrl = video.url || video.altUrl;
+                                                const uniqueId = `${unit.unitId}_video_${videoUrl}`;
+                                                
+                                                if (!supabaseCompletionsSet.has(uniqueId)) {
+                                                    console.log(`DEBUG (LSSync): Found locally completed video missing in Supabase: ${uniqueId}`);
+                                                    
+                                                    // Prepare completion data
+                                                    const completionData = {
+                                                        user_id: currentUserId,
+                                                        item_type: 'video',
+                                                        item_identifier: videoUrl,
+                                                        unit_id: unit.unitId,
+                                                        completed_at: video.completionDate || new Date().toISOString()
+                                                    };
+                                                    
+                                                    itemsToUploadCount++;
+                                                    
+                                                    try {
+                                                        // Attempt to insert into Supabase
+                                                        const { error } = await supabaseClient
+                                                            .from('completions')
+                                                            .insert(completionData);
+                                                        
+                                                        if (error) {
+                                                            console.error(`DEBUG (LSSync): Failed to upload video completion to Supabase: ${uniqueId}`, error);
+                                                            itemsFailedCount++;
+                                                        } else {
+                                                            console.log(`DEBUG (LSSync): Successfully uploaded video completion to Supabase: ${uniqueId}`);
+                                                            // Add to set to prevent duplicate attempts
+                                                            supabaseCompletionsSet.add(uniqueId);
+                                                        }
+                                                    } catch (insertError) {
+                                                        console.error(`DEBUG (LSSync): Error during video completion upload: ${uniqueId}`, insertError);
+                                                        itemsFailedCount++;
+                                                    }
+                                                } else {
+                                                    itemsSkippedCount++;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Check quizzes
+                                    if (topicProgress.quizzes && Array.isArray(topicProgress.quizzes)) {
+                                        for (const quiz of topicProgress.quizzes) {
+                                            if (quiz.completed === true) {
+                                                const uniqueId = `${unit.unitId}_quiz_${quiz.quizId}`;
+                                                
+                                                if (!supabaseCompletionsSet.has(uniqueId)) {
+                                                    console.log(`DEBUG (LSSync): Found locally completed quiz missing in Supabase: ${uniqueId}`);
+                                                    
+                                                    // Prepare completion data
+                                                    const completionData = {
+                                                        user_id: currentUserId,
+                                                        item_type: 'quiz',
+                                                        item_identifier: quiz.quizId,
+                                                        unit_id: unit.unitId,
+                                                        completed_at: quiz.completionDate || new Date().toISOString()
+                                                    };
+                                                    
+                                                    itemsToUploadCount++;
+                                                    
+                                                    try {
+                                                        // Attempt to insert into Supabase
+                                                        const { error } = await supabaseClient
+                                                            .from('completions')
+                                                            .insert(completionData);
+                                                        
+                                                        if (error) {
+                                                            console.error(`DEBUG (LSSync): Failed to upload quiz completion to Supabase: ${uniqueId}`, error);
+                                                            itemsFailedCount++;
+                                                        } else {
+                                                            console.log(`DEBUG (LSSync): Successfully uploaded quiz completion to Supabase: ${uniqueId}`);
+                                                            // Add to set to prevent duplicate attempts
+                                                            supabaseCompletionsSet.add(uniqueId);
+                                                        }
+                                                    } catch (insertError) {
+                                                        console.error(`DEBUG (LSSync): Error during quiz completion upload: ${uniqueId}`, insertError);
+                                                        itemsFailedCount++;
+                                                    }
+                                                } else {
+                                                    itemsSkippedCount++;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                console.log(`DEBUG (LSSync): Local data for unit ${unit.unitId} is not an array. Skipping.`);
+                            }
+                        } catch (parseError) {
+                            console.error(`DEBUG (LSSync): Error parsing local data for unit ${unit.unitId}:`, parseError);
+                        }
+                    } else {
+                        console.log(`DEBUG (LSSync): No local data found for unit ${unit.unitId}`);
+                    }
+                }
+                
+                // Log summary
+                console.log(`DEBUG (LSSync): Sync finished. Items to upload check: ${itemsToUploadCount}. Items skipped (already in DB): ${itemsSkippedCount}. Items failed to upload: ${itemsFailedCount}.`);
+                
+            } catch (error) {
+                console.error("DEBUG (LSSync): Error during localStorage to Supabase sync:", error);
+            }
+        }
+        
         // Flowchart Mermaid Definition
         const flowchartDefinition = `flowchart TD
     A[Start Learning Session] --> B[Gather All Materials]
@@ -348,203 +887,224 @@ Thank you for helping me prepare for my AP Statistics exam!`;
         
         // Define the PDF files and organize them by topic
         const pdfFiles = [
+        {
+        id: "8-1",
+        name: "Topic 8.1",
+        description: "Introducing Statistics: Are My Results Unexpected?",
+        videos: [
             {
-                id: "9-1",
-                name: "Topic 9.1",
-                description: "Introducing Statistics: Do Those Points Align?",
-                videos: [
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/pdddxf5g7m?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1aMPs1uK5H7dvYoVaGh2TQLkdJGBAjoPd/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                quizzes: [],
-                current: false
-            },
-            {
-                id: "9-2",
-                name: "Topic 9.2",
-                description: "Confidence Intervals for the Slope of a Regression Model",
-                videos: [
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/juuru4ud2g?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/18e3wAS58P1SW1ok8tv3mtFPhmM3pCRwN/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/s7fp3ef6i1?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1LLyG6B71f0kAoo6QHxQPb1JGQ4hVwkKq/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/ote8293qie?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1UkOJyY-qEovCHQANK5jtZhzNNpa4iHbK/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                quizzes: [
-                    {
-                        questionPdf: "pdfs/unit9/9.2_quiz.pdf",
-                        answersPdf: "pdfs/unit9/9.2_quiz_answer.pdf",
-                        quizId: "9-2_q1",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                current: false
-            },
-            {
-                id: "9-3",
-                name: "Topic 9.3",
-                description: "Justifying a Claim About the Slope of a Regression Model Based on a Confidence Interval",
-                videos: [
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/umv9qc22kb?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1yWqjcF-IyHImRwTBV3cEIt13u0infZzI/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/ynbq7du52l?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1GqvcUy_AJRnTgDORWQkAVHSWjKpRxTaT/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                quizzes: [
-                    {
-                        questionPdf: "pdfs/unit9/9.3_quiz.pdf",
-                        answersPdf: "pdfs/unit9/9.3_quiz_answer.pdf",
-                        quizId: "9-3_q1",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                current: false
-            },
-            {
-                id: "9-4",
-                name: "Topic 9.4",
-                description: "Setting Up a Test for the Slope of a Regression Model",
-                videos: [
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/quc0brlorr?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1LKHmLObjf3Nnszvk833XeLgH5JJ9F0_g/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/mqvjasjnfa?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1EBPBsC-oJXGaxn7jp1Q92IWetvaPNl1M/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                quizzes: [
-                    {
-                        questionPdf: "pdfs/unit9/9.4_quiz.pdf",
-                        answersPdf: "pdfs/unit9/9.4_quiz_answer.pdf",
-                        quizId: "9-4_q1",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                current: false
-            },
-            {
-                id: "9-5",
-                name: "Topic 9.5",
-                description: "Carrying Out a Test for the Slope of a Regression Model",
-                videos: [
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/qepiqzyga4?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1aggJHSL5dJcEBYuo4Z7M_lvsoLvx4RYY/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/7rptngcenm?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1vct7foAM_sxXzRy4rviUox0DkQMm7Yf-/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/mwl7ag5ipr?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1h5OJH_mC6MUqmKbW_K-Xqx7IN3bjOscz/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                quizzes: [
-                    {
-                        questionPdf: "pdfs/unit9/9.5_quiz.pdf",
-                        answersPdf: "pdfs/unit9/9.5_quiz_answer.pdf",
-                        quizId: "9-5_q1",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                current: false
-            },
-            {
-                id: "9-6",
-                name: "Topic 9.6",
-                description: "Skills Focus: Selecting an Appropriate Inference Procedure",
-                videos: [
-                    {
-                        url: "https://apclassroom.collegeboard.org/d/mitydyeo84?sui=33,9",
-                        altUrl: "https://drive.google.com/file/d/1FcZcPYSLBXLkfBkpkyTfAWQ6tR_WxZ6o/view?usp=drive_link",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                quizzes: [
-                    {
-                        questionPdf: "pdfs/unit9/9.6_quiz.pdf",
-                        answersPdf: "pdfs/unit9/9.6_quiz_answer.pdf",
-                        quizId: "9-6_q1",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                current: false
-            },
-            {
-                id: "9-capstone",
-                name: "Unit 9 Progress Check",
-                description: "Capstone Assessment",
-                videos: [],
-                quizzes: [
-                    {
-                        questionPdf: "pdfs/unit9/9-PC_FRQ_quiz.pdf",
-                        answersPdf: "pdfs/unit9/9-PC_FRQ_answer.pdf",
-                        quizId: "9-capstone_q1",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        questionPdf: "pdfs/unit9/9-PC_MCQ_A_answer.pdf",
-                        answersPdf: "pdfs/unit9/9-PC_MCQ_A_answer.pdf",
-                        quizId: "9-capstone_q2",
-                        completed: false,
-                        completionDate: null
-                    },
-                    {
-                        questionPdf: "pdfs/unit9/9-PC_MCQ_B_answer.pdf",
-                        answersPdf: "pdfs/unit9/9-PC_MCQ_B_answer.pdf",
-                        quizId: "9-capstone_q3",
-                        completed: false,
-                        completionDate: null
-                    }
-                ],
-                isCapstone: true,
-                current: false
+                url: "https://apclassroom.collegeboard.org/d/ej0nzh9akp?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1kw-NYDqOcOUP8zvAsSuzIfuQ9KXow99C/view?usp=drive_link",
+                completed: false,
+                completionDate: null
             }
+        ],
+        quizzes: [],
+        current: false
+      },
+      {
+        id: "8-2",
+        name: "Topic 8.2",
+        description: "Setting Up a Chi-Square Goodness of Fit Test",
+        videos: [
+            {
+                url: "https://apclassroom.collegeboard.org/d/y7ikpxw7jp?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1Aup8w5fYTy69zWogOdtsXCO6kl6UNCCT/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            },
+            {
+                url: "https://apclassroom.collegeboard.org/d/3uua57pe0x?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1Y7lopnXRCIbckoMM9csk8h1uCixX3LKd/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            },
+            {
+                url: "https://apclassroom.collegeboard.org/d/z0hykwj3ge?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1FMDpI5aNP3UoB4YppkX3ba7llfvfhLba/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        quizzes: [
+            {
+                questionPdf: "pdfs/unit8/8.2_quiz.pdf",
+                answersPdf: "pdfs/unit8/8.2_quiz_answer.pdf",
+                quizId: "8-2_q1",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        current: false
+      },
+      {
+        id: "8-3",
+        name: "Topic 8.3",
+        description: "Carrying Out a Chi-Square Test for Goodness of Fit",
+        videos: [
+            {
+                url: "https://apclassroom.collegeboard.org/d/9fkzxeaa5b?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1NemHYSwgnig3l3FUeyDYcDdt80aIYfd4/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            },
+            {
+                url: "https://apclassroom.collegeboard.org/d/1rm91jvq1n?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1A3t8-9QW7ubguCrQdApGKf4GkZWb1qBi/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            },
+            {
+                url: "https://apclassroom.collegeboard.org/d/nayiwphnlr?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1tqgSvs4IHjltdUWtH7WmyqbPWGCMMoXb/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        quizzes: [
+            {
+                questionPdf: "pdfs/unit8/8.3_quiz.pdf",
+                answersPdf: "pdfs/unit8/8.3_quiz_answer.pdf",
+                quizId: "8-3_q1",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        current: false
+      },
+      {
+        id: "8-4",
+        name: "Topic 8.4",
+        description: "Expected Counts in Two-Way Tables",
+        videos: [
+            {
+                url: "https://apclassroom.collegeboard.org/d/hmyh34raqt?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/16dgP2zYBVUN2qzFlGRXKZ5aqErJv8FyQ/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        quizzes: [
+            {
+                questionPdf: "pdfs/unit8/8.4_quiz.pdf",
+                answersPdf: "pdfs/unit8/8.4_quiz_answer.pdf",
+                quizId: "8-4_q1",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        current: false
+      },
+      {
+        id: "8-5",
+        name: "Topic 8.5",
+        description: "Setting Up a Chi-Square Test for Homogeneity or Independence",
+        videos: [
+            {
+                url: "https://apclassroom.collegeboard.org/d/0bnpabex6u?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1YHP2ipcZ5Vj35OVgZBYwExUjfU-yB2q1/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            },
+            {
+                url: "https://apclassroom.collegeboard.org/d/kqfcpu28su?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1YHP2ipcZ5Vj35OVgZBYwExUjfU-yB2q1/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        quizzes: [
+            {
+                questionPdf: "pdfs/unit8/8.5_quiz.pdf",
+                answersPdf: "pdfs/unit8/8.5_quiz_answer.pdf",
+                quizId: "8-5_q1",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        current: false
+      },
+      {
+        id: "8-6",
+        name: "Topic 8.6",
+        description: "Carrying Out a Chi-Square Test for Homogeneity or Independence",
+        videos: [
+            {
+                url: "https://apclassroom.collegeboard.org/d/gp64nrb7vq?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1DS_LxyMAABbjaN3VrMjBcDXy0PwbDaP3/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            },
+            {
+                url: "https://apclassroom.collegeboard.org/d/88cjo73k9v?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1hm-K8vBzjXcx7hTdU2E8-0bIDhdUgiq_/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            },
+            {
+                url: "https://apclassroom.collegeboard.org/d/1ea6gxau2t?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/1v9ENpspNX7MSsuE50ZXoQyizuGOJ35sp/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        quizzes: [
+            {
+                questionPdf: "pdfs/unit8/8.6_quiz.pdf",
+                answersPdf: "pdfs/unit8/8.6_quiz_answer.pdf",
+                quizId: "8-6_q1",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        current: false
+      },
+      {
+        id: "8-7",
+        name: "Topic 8.7",
+        description: "Skills Focus: Selecting an Appropriate Inference Procedure for Categorical Data",
+        videos: [
+            {
+                url: "https://apclassroom.collegeboard.org/d/v3kuvm87ss?sui=33,8",
+                altUrl: "https://drive.google.com/file/d/175SWda7WXUWkt1EbLLDOwKWD-4Gn8llx/view?usp=drive_link",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        quizzes: [],
+        current: false
+      },
+      {
+        id: "8-capstone",
+        name: "Unit 8 Progress Check",
+        description: "Capstone Assessment",
+        videos: [],
+        quizzes: [
+            {
+                questionPdf: "pdfs/unit8/8-PC_FRQ_quiz.pdf",
+                answersPdf: "pdfs/unit8/8-PC_FRQ_answer.pdf",
+                quizId: "8-capstone_q1",
+                completed: false,
+                completionDate: null
+            },
+            {
+                questionPdf: "pdfs/unit8/8-PC_MCQ_A_answer.pdf",
+                answersPdf: "pdfs/unit8/8-PC_MCQ_A_answer.pdf",
+                quizId: "8-capstone_q2",
+                completed: false,
+                completionDate: null
+            },
+            {
+                questionPdf: "pdfs/unit8/8-PC_MCQ_B_answer.pdf",
+                answersPdf: "pdfs/unit8/8-PC_MCQ_B_answer.pdf",
+                quizId: "8-capstone_q3",
+                completed: false,
+                completionDate: null
+            }
+        ],
+        isCapstone: true,
+        current: false
+      }
         ];
         
         // Function to create a topic card for display in the Study Materials tab
@@ -702,7 +1262,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
                             </svg>
                         </span>
-                                    <span class="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
+                            <span class="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
                                         If AP Classroom is down, <a href="${video.altUrl}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
                         </span>
                         ` : ''}
@@ -905,7 +1465,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                 });
                 
                 // Save to local storage
-                saveProgress();
+                saveTopicProgress();
                 
                 // Reset section headers
                 const currentTopicHeader = document.getElementById('current-topic-header');
@@ -1026,7 +1586,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             video.completionDate = isCompleted ? new Date().toISOString() : null;
             
             // Save to localStorage
-            saveProgress();
+            saveTopicProgress();
             
             // Refresh UI
             populateTopicCards();
@@ -1034,8 +1594,20 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             populateQuickAccessTopics();
             updateProgressBar();
             
+            console.log(`DEBUG: Before Supabase Check. currentUserId:`, currentUserId, `isCompleted:`, isCompleted); // Updated log
+            if (currentUserId) {
+                if (isCompleted) { // ADD THIS CHECK
+                    console.log('DEBUG: Item marked complete, attempting to save to Supabase...');
+                    saveCompletionToSupabase('video', videoUrl, UNIT_ID); // Pass correct itemType/identifier
+                } else {
+                    // Item marked incomplete - Call delete function
+                    console.log('DEBUG: Item marked incomplete. Attempting to delete from Supabase...');
+                    deleteCompletionFromSupabase('video', videoUrl, UNIT_ID);
+                }
+            }
+            
             // Call placeholder function for checking local storage quota
-            checkLocalQuota();
+            checkDailyQuotaCompletion();
         }
         
         // Function to mark a specific quiz as completed or not completed
@@ -1053,7 +1625,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             quiz.completionDate = isCompleted ? new Date().toISOString() : null;
             
             // Save to localStorage
-            saveProgress();
+            saveTopicProgress();
             
             // Refresh UI
             populateTopicCards();
@@ -1061,14 +1633,135 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             populateQuickAccessTopics();
             updateProgressBar();
             
+            console.log(`DEBUG: Before Supabase Check. currentUserId:`, currentUserId, `isCompleted:`, isCompleted); // Updated log
+            if (currentUserId) {
+                if (isCompleted) { // ADD THIS CHECK
+                    console.log('DEBUG: Item marked complete, attempting to save to Supabase...');
+                    saveCompletionToSupabase('quiz', quizId, UNIT_ID); // Pass correct itemType/identifier
+                } else {
+                    // Item marked incomplete - Call delete function
+                    console.log('DEBUG: Item marked incomplete. Attempting to delete from Supabase...');
+                    deleteCompletionFromSupabase('quiz', quizId, UNIT_ID);
+                }
+            }
+            
             // Call placeholder function for checking local storage quota
-            checkLocalQuota();
+            checkDailyQuotaCompletion();
         }
         
-        // Placeholder function for checking local storage quota
-        function checkLocalQuota() {
-            // This function will be implemented later
-            console.log('Local storage quota check placeholder');
+        
+        // Function to check if daily quota has been met and record it in Supabase
+        async function checkDailyQuotaCompletion() {
+            if (!currentUserId) {
+                console.log('DEBUG (QuotaCheck): Cannot check daily quota without user ID.');
+                // Remove class if no user is logged in (redundant with updateQuotaMetVisualIndicator, but safe)
+                // document.body.classList.remove('quota-met-today');
+                return;
+            }
+
+            // --- Get Dynamic Quota Targets ---
+            console.log('DEBUG (QuotaCheck): Calculating dynamic quota targets...');
+            const { requiredVideosPerDay, requiredQuizzesPerDay, error: quotaError } = await calculateDynamicQuota();
+
+            if (quotaError) {
+                console.error(`DEBUG (QuotaCheck): Failed to calculate dynamic quota: ${quotaError}. Aborting check.`);
+                // Update visual indicator to remove 'met' status if calculation fails
+                await updateQuotaMetVisualIndicator();
+                return;
+            }
+             console.log(`DEBUG (QuotaCheck): Dynamic targets: Videos=${requiredVideosPerDay}, Quizzes=${requiredQuizzesPerDay}`);
+
+
+            // Get today's date boundaries using UTC
+            const now = new Date();
+            const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+            const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+            const todayDateString = startOfDayUTC.toISOString().split('T')[0];
+
+            console.log(`DEBUG: Checking completions for UTC date ${todayDateString} from ${startOfDayUTC.toISOString()} to ${endOfDayUTC.toISOString()}`);
+
+            try {
+                // Query Supabase for today's completions
+                const { data, error } = await supabaseClient
+                    .from('completions')
+                    .select('item_type')
+                    .eq('user_id', currentUserId)
+                    .gte('completed_at', startOfDayUTC.toISOString())
+                    .lte('completed_at', endOfDayUTC.toISOString());
+
+                if (error) {
+                    console.error('Error fetching today\'s completions:', error);
+                     await updateQuotaMetVisualIndicator(); // Update visual on error
+                    return;
+                }
+
+                // Count videos and quizzes completed today
+                const videosToday = data ? data.filter(item => item.item_type === 'video').length : 0;
+                const quizzesToday = data ? data.filter(item => item.item_type === 'quiz').length : 0;
+
+                console.log(`DEBUG (QuotaCheck): Fetched counts for today: Videos=${videosToday}, Quizzes=${quizzesToday}`);
+
+                // --- Check if Quota is Met Now using DYNAMIC targets ---
+                const quotaMetNow = videosToday >= requiredVideosPerDay && quizzesToday >= requiredQuizzesPerDay;
+                console.log(`DEBUG: Quota met now (dynamic)? ${quotaMetNow}`);
+
+
+                // Query Existing Status and Update Logic
+                try {
+                    const quotaStatusResult = await supabaseClient
+                        .from('daily_quotas_met')
+                        .select('id')
+                        .eq('user_id', currentUserId)
+                        .eq('quota_date', todayDateString)
+                        .maybeSingle();
+
+                    if (quotaStatusResult.error) {
+                        console.error('Error checking quota status:', quotaStatusResult.error);
+                        await updateQuotaMetVisualIndicator(); // Ensure visual is updated on error
+                        return; // Don't proceed if we can't check current status
+                    }
+
+                    const recordExists = quotaStatusResult.data !== null;
+                    console.log(`DEBUG (QuotaCheck - DB): Record exists for today? ${recordExists}`);
+
+                    // Logic for Insert/Delete/No Change
+                    if (quotaMetNow && !recordExists) {
+                        console.log("DEBUG (QuotaCheck - DB): Attempting to INSERT quota record...");
+                        const { error: insertError } = await supabaseClient
+                            .from('daily_quotas_met')
+                            .insert({ user_id: currentUserId, quota_date: todayDateString });
+
+                        if (insertError && insertError.code !== '23505') { // Ignore unique violation, log others
+                            console.error('Error logging quota completion:', insertError);
+                        } else if (!insertError) {
+                             console.log('DEBUG (QuotaCheck - DB): Daily flexible quota met and logged successfully.');
+                        } else {
+                             console.log('DEBUG (QuotaCheck - DB): Quota already logged for today (Unique constraint violation).');
+                        }
+                    } else if (!quotaMetNow && recordExists) {
+                        console.log("DEBUG (QuotaCheck - DB): Attempting to DELETE quota record...");
+                        const { error: deleteError } = await supabaseClient
+                            .from('daily_quotas_met')
+                            .delete()
+                            .match({ user_id: currentUserId, quota_date: todayDateString }); // Use match for safety
+
+                        if (deleteError) {
+                            console.error('Error deleting quota record:', deleteError);
+                        } else {
+                             console.log('DEBUG (QuotaCheck - DB): Daily quota record deleted successfully.');
+                        }
+                    } else {
+                         console.log("DEBUG (QuotaCheck - DB): No change needed for DB quota status.");
+                    }
+
+                 } catch (quotaManageError) {
+                    console.error('Error during quota status management:', quotaManageError);
+                 }
+            } catch (fetchError) {
+                console.error('Error during quota check process:', fetchError);
+            }
+            // Update visual indicator at the very end, reflecting the final state
+            await updateQuotaMetVisualIndicator();
         }
         
         // Function to mark all videos and quizzes in a topic as completed
@@ -1099,7 +1792,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             }
             
             // Update local storage to persist completion status
-            saveProgress();
+            saveTopicProgress();
             
             // Refresh the UI
             populateTopicCards();
@@ -1108,7 +1801,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             updateProgressBar();
             
             // Call placeholder function for checking local storage quota
-            checkLocalQuota();
+            checkDailyQuotaCompletion();
             
             // If a topic was completed, scroll to the next one in the study materials tab
             if (currentIndex < pdfFiles.length - 1 && document.getElementById('content-study-materials').classList.contains('active')) {
@@ -1177,8 +1870,8 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             }
         }
         
-        // Function to save progress to localStorage
-        function saveProgress() {
+        // Function to save topic progress to local storage
+        function saveTopicProgress() {
             const progress = pdfFiles.map(topic => ({
                 id: topic.id,
                 completed: topic.videos.every(v => v.completed) && topic.quizzes.every(q => q.completed),
@@ -1196,12 +1889,12 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                 }))
             }));
             
-            localStorage.setItem('apStatsUnit9TopicProgress', JSON.stringify(progress));
+            localStorage.setItem('apStatsUnit' + UNIT_ID + 'Progress', JSON.stringify(progress));
         }
         
-        // Function to load progress from localStorage
-        function loadProgress() {
-            const savedProgress = localStorage.getItem('apStatsUnit9TopicProgress');
+        // Function to load topic progress from local storage
+        function loadTopicProgress() {
+            const savedProgress = localStorage.getItem('apStatsUnit' + UNIT_ID + 'Progress');
             
             if (savedProgress) {
                 const progress = JSON.parse(savedProgress);
@@ -1260,7 +1953,45 @@ Thank you for helping me prepare for my AP Statistics exam!`;
         }
         
         // Document ready function
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Call identifyUser first
+            await identifyUser();
+            
+            // Attempt to sync offline queue if user is identified
+            if (currentUserId) {
+                await syncOfflineQueue();
+                // await syncLocalStorageToSupabase(); // Disabled to prevent potential duplicate entries from race conditions
+            }
+            
+            // --- Generate QR Code ---
+            try {
+                const qrCodeContainer = document.getElementById('qrcode-container');
+                const currentUrl = window.location.href; // Get the current page URL dynamically
+                
+                if (qrCodeContainer && typeof QRCode !== 'undefined') {
+                     // Clear previous QR code if any (useful for testing/reloads)
+                     qrCodeContainer.innerHTML = ''; 
+                     
+                     new QRCode(qrCodeContainer, {
+                        text: currentUrl,
+                        width: 180, // ADJUSTED SIZE
+                        height: 180, // ADJUSTED SIZE
+                        colorDark : "#000000",
+                        colorLight : "#ffffff",
+                        correctLevel : QRCode.CorrectLevel.H // High correction level
+                     });
+                     console.log('DEBUG: QR Code generated for URL:', currentUrl);
+                } else {
+                     console.error('ERROR: QR Code container or library not found.');
+                     if(qrCodeContainer) qrCodeContainer.innerHTML = '<p class="text-red-500 text-xs p-2">Error loading QR code.</p>';
+                }
+            } catch(qrError) {
+                 console.error('ERROR: Failed to generate QR code:', qrError);
+                 const qrCodeContainer = document.getElementById('qrcode-container');
+                 if(qrCodeContainer) qrCodeContainer.innerHTML = '<p class="text-red-500 text-xs p-2">Error generating QR code.</p>';
+            }
+            // --- End Generate QR Code ---
+            
             // Set Grok prompt content
             document.getElementById('grok-prompt').textContent = grokPrompt;
             
@@ -1288,15 +2019,20 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                     
                     // Initialize topic cards if study materials tab
                     if (button.id === 'tab-study-materials') {
-                        loadProgress();
+                        loadTopicProgress();
                         populateTopicCards();
                     }
                     
                     // Update current topic info and quick access topics if grok prompt tab
                     if (button.id === 'tab-grok-prompt') {
-                        loadProgress();
+                        loadTopicProgress();
                         updateCurrentTopicInfo();
                         populateQuickAccessTopics();
+                    }
+                    
+                    // Call displayOverallProgress if overall progress tab
+                    if (button.id === 'tab-overall-progress') {
+                        displayOverallProgress();
                     }
                 });
             });
@@ -1439,15 +2175,20 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             
             // Initialize study materials if that tab is initially selected
             if (document.getElementById('tab-study-materials').classList.contains('active')) {
-                loadProgress();
+                loadTopicProgress();
                 populateTopicCards();
             }
             
             // Initialize grok prompt tab if that tab is initially selected
             if (document.getElementById('tab-grok-prompt').classList.contains('active')) {
-                loadProgress();
+                loadTopicProgress();
                 updateCurrentTopicInfo();
                 populateQuickAccessTopics();
+            }
+            
+            // Initialize overall progress tab if that tab is initially selected
+            if (document.getElementById('tab-overall-progress').classList.contains('active')) {
+                displayOverallProgress();
             }
         });
         
@@ -1457,7 +2198,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             if (!currentTopicInfo) return;
             
             // Find the current topic
-            loadProgress();
+            loadTopicProgress();
             
             // Check if all topics are completed
             const allCompleted = pdfFiles.every(topic => {
@@ -1613,9 +2354,9 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                             </span>
                             <span class="absolute top-full left-0 mt-1 hidden group-hover:block bg-white border border-gray-200 rounded p-2 shadow-md text-xs text-gray-700 w-48 z-50">
                                         If AP Classroom is down, <a href="${video.altUrl}" class="text-blue-600 hover:text-blue-800">click here</a> for the backup Google Drive video.
-                            </span>
-                            ` : ''}
-                        </a>
+                        </span>
+                        ` : ''}
+                    </a>
                             </div>
                             `;
                         } else if (video.altUrl) {
@@ -1632,9 +2373,9 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                                     onchange="handleItemCompletionChange(event)"
                                 >
                                 <a href="${video.altUrl}" target="_blank" class="flex items-center text-yellow-600 hover:text-yellow-800 bg-white p-2 rounded border border-yellow-200 hover:bg-yellow-50 flex-grow">
-                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
-                                <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
-                            </svg>
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z"></path>
+                        </svg>
                                     Watch Topic Video${videoNumber} (Google Drive)
                                 </a>
                             </div>
@@ -1934,7 +2675,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                     // Set this topic as current
                     pdfFiles.forEach(t => t.current = false);
                     topic.current = true;
-                    saveProgress();
+                    saveTopicProgress();
                     
                     // Update UI
                     updateCurrentTopicInfo();
@@ -1958,7 +2699,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             pdfFiles.forEach(topic => {
                 topic.current = (topic.name === topicName);
             });
-            saveProgress();
+            saveTopicProgress();
             updateCurrentTopicInfo();
             populateQuickAccessTopics();
         }
@@ -1989,6 +2730,837 @@ Thank you for helping me prepare for my AP Statistics exam!`;
         window.markVideoComplete = markVideoComplete;
         window.markQuizComplete = markQuizComplete;
         window.handleItemCompletionChange = handleItemCompletionChange;
+        
+        // Listen for browser coming back online
+        window.addEventListener('online', function() {
+            console.log("Browser detected online status.");
+            
+            if (currentUserId) {
+                syncOfflineQueue();
+            } else {
+                console.log("User not identified, cannot sync yet.");
+            }
+        });
+        
+        // Initialize overall progress tab if that tab is initially selected
+        if (document.getElementById('tab-overall-progress').classList.contains('active')) {
+            displayOverallProgress();
+        }
+        
+        // Function to display overall progress information
+        async function displayOverallProgress() {
+            try {
+                // Show loading message and hide/clear other content initially
+                const loadingEl = document.getElementById('overall-progress-loading');
+                loadingEl.style.display = 'block';
+                
+                // Clear/hide other container contents
+                document.getElementById('dot-plot-container').innerHTML = '';
+                document.getElementById('remaining-items').innerHTML = '';
+                document.getElementById('flexible-quota').innerHTML = '';
+                document.getElementById('todays-quota-status').innerHTML = '';
+                document.getElementById('peer-quota-table').innerHTML = '';
+                document.getElementById('peer-quota-loading').style.display = 'none';
+                
+                // Call functions to populate different sections
+                await displaySupabaseDotPlot();
+                displayRemainingItemCounts();
+                displayFlexibleQuota();
+                await displayDailyQuotaStatus();
+                await fetchAndDisplayPeerQuotas();
+            } finally {
+                // Hide loading message after all operations complete (even if there was an error)
+                document.getElementById('overall-progress-loading').style.display = 'none';
+            }
+        }
+        
+        // Function to display total remaining item counts
+        function displayRemainingItemCounts() {
+            const targetEl = document.getElementById('remaining-items');
+            
+            // Check if ALL_UNITS_DATA exists
+            if (typeof ALL_UNITS_DATA === 'undefined' || !Array.isArray(ALL_UNITS_DATA)) {
+                targetEl.innerHTML = `<div class="text-red-500">Error: Course data not loaded properly. Please refresh the page.</div>`;
+                return;
+            }
+            
+            // Get total counts using the function from allUnitsData.js
+            const { totalVideos, totalQuizzes } = getTotalItemCounts(ALL_UNITS_DATA);
+            
+            // Display the information
+            targetEl.innerHTML = `
+                <h3 class="text-lg font-semibold mb-2 text-indigo-800">Course Content Overview</h3>
+                <p>Total Items Across All Units: ${totalVideos} videos, ${totalQuizzes} quizzes.</p>
+            `;
+        }
+        
+        // Function to display flexible quota information based on AP exam deadline
+        async function displayFlexibleQuota() {
+            const targetEl = document.getElementById('flexible-quota');
+            targetEl.innerHTML = `<p class="text-gray-500">Calculating dynamic goal...</p>`; // Loading message
+
+            const { requiredVideosPerDay, requiredQuizzesPerDay, daysRemaining, error } = await calculateDynamicQuota();
+
+            if (error) {
+                 targetEl.innerHTML = `
+                    <h3 class="text-lg font-semibold mb-2 text-indigo-800">Flexible Daily Goal</h3>
+                    <p class="text-red-500">Could not calculate dynamic goal: ${error}. Using defaults.</p>
+                    <p class="font-medium mt-1">~5 videos & ~3 quizzes per day (Default)</p>
+                 `;
+                 return;
+            }
+
+            if (daysRemaining <= 0) {
+                 targetEl.innerHTML = `
+                    <h3 class="text-lg font-semibold mb-2 text-indigo-800">Flexible Daily Goal</h3>
+                    <p>The AP Exam date (May 8th, 2025) has passed or is today.</p>
+                    ${ (requiredVideosPerDay > 0 || requiredQuizzesPerDay > 0)
+                        ? `<p class="font-medium mt-1">Remaining: ${requiredVideosPerDay} videos & ${requiredQuizzesPerDay} quizzes.</p>`
+                        : '<p class="font-medium mt-1 text-green-600">All course items completed!</p>'
+                    }
+                `;
+                 return;
+            }
+
+            // Display the dynamically calculated information
+            targetEl.innerHTML = `
+                <h3 class="text-lg font-semibold mb-2 text-indigo-800">Flexible Daily Goal (Dynamic)</h3>
+                <p>To complete remaining content by the AP Exam (May 8th, 2025):</p>
+                <p class="font-medium mt-1">~${requiredVideosPerDay} videos & ~${requiredQuizzesPerDay} quizzes per day</p>
+                <p class="text-sm text-gray-500 mt-1">${daysRemaining} days remaining until the exam</p>
+            `;
+        }
+        
+        // Function to display a dot plot visualization of completions from Supabase
+        async function displaySupabaseDotPlot() {
+            const container = document.getElementById('dot-plot-container');
+
+            // Check if user is identified
+            if (!currentUserId) {
+                container.innerHTML = `
+                    <div class="text-center p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-yellow-700">Please enter username to view overall progress.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Clear previous content and show loading message
+            container.innerHTML = `
+                <div class="text-center p-4">
+                    <p class="text-gray-500">Loading dot plot data...</p>
+                </div>
+            `;
+
+            try {
+                // Fetch completed_at AND item_type timestamps from Supabase
+                const { data, error } = await supabaseClient
+                    .from('completions')
+                    .select('completed_at, item_type') // <-- Fetch item_type too
+                    .eq('user_id', currentUserId)
+                    .order('completed_at');
+
+                console.log('DEBUG (DotPlot): Fetched data from Supabase completions:', data);
+
+                if (error) {
+                    console.log('DEBUG (DotPlot): Fetch returned an error.');
+                    throw new Error(`Error fetching completion data: ${error.message}`);
+                }
+
+                if (!data || data.length === 0) {
+                    console.log('DEBUG (DotPlot): No data found or data array is empty.');
+                    container.innerHTML = `
+                        <div class="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-blue-700">No completions found. Start completing topics to see your progress!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                console.log('DEBUG (DotPlot): Proceeding to process fetched data...');
+
+                // Convert completion data to objects with Date and type, filter invalid dates
+                const completionItems = data
+                    .map(item => ({ date: new Date(item.completed_at), type: item.item_type }))
+                    .filter(item => !isNaN(item.date));
+
+                if (completionItems.length === 0) {
+                     container.innerHTML = `
+                        <div class="text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                            <p class="text-blue-700">No valid completion dates found.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Find the minimum and maximum dates from valid items
+                const minDate = new Date(Math.min(...completionItems.map(item => item.date.getTime())));
+                const maxDate = new Date(Math.max(...completionItems.map(item => item.date.getTime())));
+
+                console.log('DEBUG (DotPlot): Date Range:', minDate, 'to', maxDate);
+
+                // Define constants for time durations in milliseconds
+                const MSEC_PER_HOUR = 60 * 60 * 1000;
+                const MSEC_PER_DAY = 24 * MSEC_PER_HOUR;
+                const MSEC_PER_WEEK = 7 * MSEC_PER_DAY;
+                const MSEC_PER_MONTH = 30 * MSEC_PER_DAY; // Approximation
+
+                // Calculate the total duration
+                const totalDuration = maxDate.getTime() - minDate.getTime();
+
+                // Determine time unit and bin duration (same logic as before)
+                let timeUnit = 'days';
+                let binDurationMillis = MSEC_PER_DAY;
+                 if (totalDuration <= MSEC_PER_HOUR) {
+                    timeUnit = 'hours';
+                    binDurationMillis = MSEC_PER_HOUR;
+                    const midPoint = (minDate.getTime() + maxDate.getTime()) / 2;
+                    minDate.setTime(midPoint - 2 * MSEC_PER_HOUR);
+                    maxDate.setTime(minDate.getTime() + 5 * MSEC_PER_HOUR);
+                } else if (totalDuration <= 12 * MSEC_PER_HOUR) {
+                    timeUnit = 'hours';
+                    binDurationMillis = Math.max(MSEC_PER_HOUR, totalDuration / 5);
+                } else if (totalDuration <= 10 * MSEC_PER_DAY) {
+                    timeUnit = 'days';
+                    binDurationMillis = Math.max(MSEC_PER_DAY, totalDuration / 5);
+                } else if (totalDuration <= 10 * MSEC_PER_WEEK) {
+                    timeUnit = 'weeks';
+                    binDurationMillis = Math.max(MSEC_PER_WEEK, totalDuration / 5);
+                } else {
+                    timeUnit = 'months';
+                    binDurationMillis = Math.max(MSEC_PER_MONTH, totalDuration / 5);
+                }
+                // ... (logging logic for unit/duration remains the same) ...
+                 if (timeUnit === 'hours') {
+                    console.log(`DEBUG (DotPlot): Using ${timeUnit} bins, duration approx ${Math.round(binDurationMillis / MSEC_PER_HOUR * 10)/10} ${timeUnit}`);
+                } else if (timeUnit === 'days') {
+                    console.log(`DEBUG (DotPlot): Using ${timeUnit} bins, duration approx ${Math.round(binDurationMillis / MSEC_PER_DAY * 10)/10} ${timeUnit}`);
+                } else if (timeUnit === 'weeks') {
+                    console.log(`DEBUG (DotPlot): Using ${timeUnit} bins, duration approx ${Math.round(binDurationMillis / MSEC_PER_WEEK * 10)/10} ${timeUnit}`);
+                } else {
+                    console.log(`DEBUG (DotPlot): Using ${timeUnit} bins, duration approx ${Math.round(binDurationMillis / MSEC_PER_MONTH * 10)/10} ${timeUnit}`);
+                }
+
+
+                // Define bin boundaries and initialize counts for videos and quizzes
+                let binStart = minDate.getTime();
+                const binBoundaries = [];
+                // Initialize counts per bin for each type
+                const binData = Array(5).fill(null).map(() => ({ video: 0, quiz: 0 }));
+
+                 // Create 5 equally-sized bins
+                for (let i = 0; i < 5; i++) {
+                    const currentBinEnd = binStart + binDurationMillis;
+                    binBoundaries.push({ start: binStart, end: currentBinEnd });
+                    binStart = currentBinEnd;
+                }
+                 // Ensure the last bin includes the maxDate
+                if (binBoundaries.length > 0 && binBoundaries[binBoundaries.length - 1].end < maxDate.getTime()) {
+                    binBoundaries[binBoundaries.length - 1].end = maxDate.getTime() + 1; // Add 1ms to ensure inclusion
+                }
+
+                console.log('DEBUG (DotPlot): Bin Boundaries:', binBoundaries);
+
+                // Assign completions to bins based on type
+                completionItems.forEach(item => {
+                    const time = item.date.getTime();
+                    for (let j = 0; j < 5; j++) {
+                        const { start, end } = binBoundaries[j];
+                        if (time >= start && time < end) { // End is exclusive except for last bin handled implicitly
+                            if (item.type === 'video') {
+                                binData[j].video++;
+                            } else if (item.type === 'quiz') {
+                                binData[j].quiz++;
+                            }
+                            break; // Item assigned to a bin
+                        }
+                    }
+                     // Check last bin inclusivity specifically
+                     if(time >= binBoundaries[4].start && time <= binBoundaries[4].end) {
+                         // This logic might double count if the loop above didn't break correctly,
+                         // but ensures items exactly at the end are caught IF the loop above misses them.
+                         // A cleaner way is to ensure the loop handles the last bin correctly.
+                         // Let's refine the loop instead.
+                     }
+                });
+
+
+                console.log('DEBUG (DotPlot): Bin Data (Video/Quiz):', binData);
+
+                // Helper function to format bin labels (same as before)
+                function formatBinLabel(startDate, endDate, timeUnit) {
+                    const start = new Date(startDate);
+                    // For display, make the end date slightly less than the actual boundary
+                    const displayEnd = new Date(endDate - 1); 
+
+                    if (timeUnit === 'hours') {
+                        const startMonth = start.toLocaleString('en-US', { month: 'short' });
+                        const startDay = start.getDate();
+                        const startHour = start.getHours();
+                        // Use displayEnd for the end hour
+                        const endHour = displayEnd.getHours(); 
+
+                        const formatHour = (hour) => {
+                            if (hour === 0) return '12am';
+                            if (hour === 12) return '12pm';
+                            return hour < 12 ? `${hour}am` : `${hour - 12}pm`;
+                        };
+                        
+                        // Handle case where end hour wraps around midnight or noon incorrectly
+                        const endHourFormatted = formatHour(endHour);
+                        // If start and end hour are the same after formatting, maybe show just one? Or show next hour?
+                        // Let's show the range for clarity
+                        const startHourFormatted = formatHour(startHour);
+
+                        return `${startMonth} ${startDay}, ${startHourFormatted}-${formatHour(startHour + 1)}`; // Show 1hr block label
+                    } else if (timeUnit === 'days') {
+                        const startMonth = start.toLocaleString('en-US', { month: 'short' });
+                        const startDay = start.getDate();
+                        const endMonth = displayEnd.toLocaleString('en-US', { month: 'short' });
+                        const endDay = displayEnd.getDate();
+
+                        if (startMonth === endMonth && startDay === endDay) {
+                            return `${startMonth} ${startDay}`;
+                        } else if (startMonth === endMonth) {
+                            return `${startMonth} ${startDay}-${endDay}`;
+                        } else {
+                            return `${startMonth} ${startDay} - ${endMonth} ${endDay}`;
+                        }
+                    } else if (timeUnit === 'weeks') {
+                         const startMonth = start.toLocaleString('en-US', { month: 'short' });
+                        const startDay = start.getDate();
+                        return `Week of ${startMonth} ${startDay}`;
+                    } else { // months
+                        const startMonth = start.toLocaleString('en-US', { month: 'short' });
+                        const startYear = start.getFullYear();
+                        return `${startMonth} ${startYear}`;
+                    }
+                }
+
+                // Initialize the HTML for the dot plot
+                let dotPlotHtml = `
+                    <h3 class="text-lg font-semibold mb-3 text-indigo-800">Overall Completions Logged Online</h3>
+                    <div class="flex justify-center items-center space-x-4 mt-2 mb-4 text-sm text-gray-500">
+                        <span><span class="inline-block w-3 h-3 bg-blue-600 rounded-full mr-1"></span>Video</span>
+                        <span><span class="inline-block w-3 h-3 bg-green-600 rounded-full mr-1"></span>Quiz</span>
+                    </div>
+                    <div class="space-y-2 p-2 bg-gray-50 rounded-lg">
+                `;
+
+                // Generate the HTML for each bin, now with colored dots
+                for (let i = 0; i < 5; i++) {
+                    const videoCount = binData[i].video;
+                    const quizCount = binData[i].quiz;
+                    const totalBinCount = videoCount + quizCount;
+                    const startDate = binBoundaries[i].start;
+                    const endDate = binBoundaries[i].end;
+                    const binLabel = formatBinLabel(startDate, endDate, timeUnit);
+
+                    // Generate the dots (blue for video, green for quiz)
+                    let dots = '';
+                    for (let j = 0; j < videoCount; j++) {
+                        dots += `<span class="inline-block w-3 h-3 bg-blue-600 rounded-full mx-0.5"></span>`; // Use blue-600
+                    }
+                    for (let k = 0; k < quizCount; k++) {
+                        dots += `<span class="inline-block w-3 h-3 bg-green-600 rounded-full mx-0.5"></span>`; // Use green-600
+                    }
+
+                    // Add the bin to the HTML
+                    dotPlotHtml += `
+                        <div class="flex items-center">
+                            <div class="w-32 font-medium text-gray-700 text-sm truncate pr-2">${binLabel}</div>
+                            <div class="flex-1 flex flex-wrap items-center">${dots || '<span class="text-gray-400 text-xs"></span>'}</div>
+                            <div class="w-8 text-right text-gray-600">${totalBinCount}</div>
+                        </div>
+                    `;
+                }
+
+                // Close the main div
+                dotPlotHtml += `</div>`;
+
+                // Calculate and add summary statistics (using total length of valid items)
+                const totalCompletions = completionItems.length;
+                 const formattedStartDate = minDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+                const formattedEndDate = maxDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+                // Calculate number of active days
+                const activeDaysSet = new Set();
+                completionItems.forEach(item => {
+                    const dateStr = item.date.toISOString().split('T')[0];
+                    activeDaysSet.add(dateStr);
+                });
+                const activeDays = activeDaysSet.size;
+                const averagePerDay = activeDays > 0 ? Math.round((totalCompletions / activeDays) * 10) / 10 : 0;
+
+                // Add summary statistics to the HTML
+                dotPlotHtml += `
+                    <div class="mt-3 grid grid-cols-3 gap-2 text-center">
+                        <div class="p-2 bg-gray-50 rounded-lg">
+                            <div class="text-xl font-bold text-indigo-600">${totalCompletions}</div>
+                            <div class="text-xs text-gray-500">Total Completions</div>
+                        </div>
+                        <div class="p-2 bg-gray-50 rounded-lg">
+                            <div class="text-xl font-bold text-indigo-600">${activeDays}</div>
+                            <div class="text-xs text-gray-500">Active Days</div>
+                        </div>
+                        <div class="p-2 bg-gray-50 rounded-lg">
+                            <div class="text-xl font-bold text-indigo-600">${averagePerDay}</div>
+                            <div class="text-xs text-gray-500">Avg Per Active Day</div>
+                        </div>
+                    </div>
+                    <div class="mt-2 text-xs text-gray-500 text-center">
+                        Data from ${formattedStartDate} to ${formattedEndDate}
+                    </div>
+                `;
+
+                console.log('DEBUG (DotPlot): Generated dotPlotHtml. Length:', dotPlotHtml ? dotPlotHtml.length : 'null');
+                
+                // Assign the HTML to the container
+                container.innerHTML = dotPlotHtml;
+                
+                console.log("DEBUG (DotPlot): Assigned HTML to container.");
+            } catch (err) {
+                console.log('DEBUG (DotPlot): Caught error during processing/rendering.');
+                container.innerHTML = `
+                    <div class="text-center p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-red-700">Error fetching dot plot data: ${err.message || 'Unknown error'}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Function to display today's quota status
+        function displayTodaysQuotaStatus() {
+            const container = document.getElementById('todays-quota-status');
+            
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date();
+            const dateStr = today.toISOString().split('T')[0]; // YYYY-MM-DD format
+            
+            // Check localStorage for quota status
+            const quotaMetKey = `quotaMet_${dateStr}`;
+            const quotaMetStatus = localStorage.getItem(quotaMetKey);
+            
+            // Default quota goals
+            const defaultVideoGoal = 5;
+            const defaultQuizGoal = 3;
+            
+            // Create the status message
+            let statusHtml = `
+                <h3 class="text-lg font-semibold mb-2 text-indigo-800">Today's Local ${defaultVideoGoal}/${defaultQuizGoal} Goal</h3>
+            `;
+            
+            if (quotaMetStatus === 'true') {
+                statusHtml += `
+                    <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <svg class="w-6 h-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                        </svg>
+                        <p class="font-medium text-green-700">Met! Well done!</p>
+                    </div>
+                `;
+            } else {
+                statusHtml += `
+                    <div class="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <svg class="w-6 h-6 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                        </svg>
+                        <p class="font-medium text-yellow-700">Not yet met. Keep going!</p>
+                    </div>
+                `;
+            }
+            
+            // Add explanation
+            statusHtml += `
+                <p class="mt-2 text-sm text-gray-500">
+                    This status is saved locally in your browser. Complete ${defaultVideoGoal} videos and ${defaultQuizGoal} quizzes today to meet your goal.
+                </p>
+            `;
+            
+            container.innerHTML = statusHtml;
+        }
+        
+        // Function to calculate the dynamic flexible daily quota
+        async function calculateDynamicQuota() {
+            const defaultQuota = { requiredVideosPerDay: 0, requiredQuizzesPerDay: 0, daysRemaining: 0, error: null };
+
+            if (!currentUserId) {
+                console.warn("DynamicQuota: Cannot calculate without user ID.");
+                return { ...defaultQuota, error: "No user ID" };
+            }
+            // Ensure ALL_UNITS_DATA is loaded and is an array
+            if (typeof ALL_UNITS_DATA === 'undefined' || !Array.isArray(ALL_UNITS_DATA)) {
+                console.error("DynamicQuota: ALL_UNITS_DATA not available or not an array.");
+                return { ...defaultQuota, error: "Course data not loaded" };
+            }
+
+            try {
+                // --- Get Total Items ---
+                // Use getTotalItemCounts ONLY for totals, not completions
+                const { totalVideos, totalQuizzes } = getTotalItemCounts(ALL_UNITS_DATA);
+                console.log(`DynamicQuota: Total items from definition: ${totalVideos} videos, ${totalQuizzes} quizzes.`);
+
+
+                // --- Get Completed Items from Supabase ---
+                console.log(`DynamicQuota: Fetching completions for user ${currentUserId}`);
+                const { data: completionsData, error: completionsError } = await supabaseClient
+                    .from('completions')
+                    .select('item_type') // Select only item_type, no need for count here
+                    .eq('user_id', currentUserId);
+
+                if (completionsError) {
+                    console.error("DynamicQuota: Error fetching completions:", completionsError);
+                    // Return default but indicate error, allows rest of UI to potentially load
+                    return { ...defaultQuota, error: `Failed to fetch completions: ${completionsError.message}` };
+                }
+
+                // Calculate completed counts from the fetched Supabase data
+                const completedVideos = completionsData?.filter(item => item.item_type === 'video').length || 0;
+                const completedQuizzes = completionsData?.filter(item => item.item_type === 'quiz').length || 0;
+                console.log(`DynamicQuota: User has completed (from Supabase): ${completedVideos} videos, ${completedQuizzes} quizzes.`);
+
+                // --- Calculate Remaining Items ---
+                const remainingVideos = Math.max(0, totalVideos - completedVideos);
+                const remainingQuizzes = Math.max(0, totalQuizzes - completedQuizzes);
+                console.log(`DynamicQuota: Remaining items: ${remainingVideos} videos, ${remainingQuizzes} quizzes.`);
+
+                // --- Calculate Days Remaining ---
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Set time to 00:00:00 for accurate date comparison
+                // Use ISO format for reliability
+                const examDate = new Date('2025-05-08T00:00:00Z'); // May 8th, 2025 UTC
+                console.log(`DynamicQuota: Today (start of day): ${today.toISOString()}, Exam Date: ${examDate.toISOString()}`);
+
+
+                if (today >= examDate) {
+                    console.log("DynamicQuota: Exam date has passed or is today.");
+                    return {
+                        requiredVideosPerDay: remainingVideos > 0 ? remainingVideos : 0,
+                        requiredQuizzesPerDay: remainingQuizzes > 0 ? remainingQuizzes : 0,
+                        daysRemaining: 0,
+                        error: null
+                    };
+                }
+
+                const timeDiff = examDate.getTime() - today.getTime();
+                // Use floor division for days remaining, ensuring we count full days
+                const daysRemaining = Math.max(1, Math.floor(timeDiff / (1000 * 3600 * 24))); // Ensure at least 1 day if not passed
+                console.log(`DynamicQuota: Days remaining until exam: ${daysRemaining}`);
+
+
+                // --- Calculate Dynamic Quota ---
+                // Use remaining days for calculation
+                const requiredVideosPerDay = Math.ceil(remainingVideos / daysRemaining);
+                const requiredQuizzesPerDay = Math.ceil(remainingQuizzes / daysRemaining);
+
+
+                console.log(`DynamicQuota: Calculated quota -> Videos/day: ${requiredVideosPerDay}, Quizzes/day: ${requiredQuizzesPerDay}`);
+
+                return {
+                    requiredVideosPerDay: requiredVideosPerDay,
+                    requiredQuizzesPerDay: requiredQuizzesPerDay,
+                    daysRemaining: daysRemaining,
+                    error: null // Indicate success
+                };
+
+            } catch (error) {
+                console.error("DynamicQuota: Exception during calculation:", error);
+                return { ...defaultQuota, error: `Exception: ${error.message}` };
+            }
+        }
+        
+        // Function to display daily quota status from Supabase
+        async function displayDailyQuotaStatus() {
+            const container = document.getElementById('todays-quota-status');
+            console.log(`DEBUG (QuotaDisplay - Entry): Function called. currentUserId is: ${currentUserId} (Type: ${typeof currentUserId})`);
+
+            if (!currentUserId) {
+                container.innerHTML = `
+                    <div class="p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                        <p class="text-gray-700">Enter username to see quota status.</p>
+                    </div>
+                `;
+                // Ensure class is removed if no user
+                // document.body.classList.remove('quota-met-today'); // Handled by updateQuotaMetVisualIndicator
+                return;
+            }
+
+            container.innerHTML = `<p class="text-gray-500">Loading today's goal status...</p>`; // Loading state
+
+            try {
+                // --- Get Dynamic Quota Targets ---
+                 console.log('DEBUG (QuotaDisplay): Calculating dynamic quota targets...');
+                const { requiredVideosPerDay, requiredQuizzesPerDay, error: quotaError } = await calculateDynamicQuota();
+
+                if (quotaError) {
+                    console.error(`DEBUG (QuotaDisplay): Failed to calculate dynamic quota: ${quotaError}.`);
+                     container.innerHTML = `
+                        <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                            <p class="text-red-700">Could not calculate dynamic goal. Please try again later.</p>
+                        </div>
+                    `;
+                    // await updateQuotaMetVisualIndicator(); // Update visual on error
+                    return;
+                 }
+                 console.log(`DEBUG (QuotaDisplay): Dynamic targets: Videos=${requiredVideosPerDay}, Quizzes=${requiredQuizzesPerDay}`);
+
+
+                // Fetch Today's Completions
+                const now = new Date();
+                const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+                const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+                const todayDateString = startOfDayUTC.toISOString().split('T')[0];
+
+                let videosToday = 0;
+                let quizzesToday = 0;
+
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('completions')
+                        .select('item_type')
+                        .eq('user_id', currentUserId)
+                        .gte('completed_at', startOfDayUTC.toISOString())
+                        .lte('completed_at', endOfDayUTC.toISOString());
+
+                    if (error) {
+                        // Don't throw, just log and proceed with 0 counts
+                        console.error(`DEBUG (QuotaDisplay): Error fetching today's completions: ${error.message}`);
+                    } else {
+                        videosToday = data ? data.filter(i => i.item_type === 'video').length : 0;
+                        quizzesToday = data ? data.filter(i => i.item_type === 'quiz').length : 0;
+                    }
+                    console.log(`DEBUG (QuotaDisplay): Today's completions: ${videosToday} videos, ${quizzesToday} quizzes.`);
+
+                } catch (fetchError) { // Catch potential exceptions
+                    console.error('DEBUG (QuotaDisplay): Exception fetching today\'s completions:', fetchError);
+                    // Continue with zero counts
+                 }
+
+                // Fetch Quota Met Status (from DB)
+                let isQuotaMetToday = false;
+                try {
+                    const { data: quotaStatusData, error: quotaStatusError } = await supabaseClient
+                        .from('daily_quotas_met')
+                        .select('id')
+                        .eq('user_id', currentUserId)
+                        .eq('quota_date', todayDateString)
+                        .maybeSingle();
+
+                    if (quotaStatusError) {
+                       console.error(`DEBUG (QuotaDisplay): Error fetching quota status from DB: ${quotaStatusError.message}`);
+                       // Don't throw, just assume not met if error occurs
+                    } else {
+                       isQuotaMetToday = (quotaStatusData !== null);
+                    }
+                     console.log(`DEBUG (QuotaDisplay): Quota met status from DB: ${isQuotaMetToday}`);
+
+                 } catch (statusError) {
+                    console.error('DEBUG (QuotaDisplay): Exception fetching quota met status:', statusError);
+                    // Assume not met on exception
+                 }
+
+                // --- Build HTML Output using DYNAMIC targets ---
+                let statusHtml = `<h3 class="text-lg font-semibold mb-3 text-indigo-800">Today's Dynamic Goal Progress</h3>`;
+
+                // Video Progress Bar
+                const videoPercent = requiredVideosPerDay > 0
+                    ? Math.min(100, (videosToday / requiredVideosPerDay) * 100)
+                    : (videosToday > 0 ? 100 : 0); // Handle 0 target: 100% if any done today, else 0
+
+
+                statusHtml += `
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-700">Videos</span>
+                            <span class="text-sm font-medium text-gray-700">${videosToday}/${requiredVideosPerDay}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${videoPercent}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                // Quiz Progress Bar
+                const quizPercent = requiredQuizzesPerDay > 0
+                    ? Math.min(100, (quizzesToday / requiredQuizzesPerDay) * 100)
+                    : (quizzesToday > 0 ? 100 : 0); // Handle 0 target: 100% if any done today, else 0
+
+
+                statusHtml += `
+                    <div class="mb-4">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-medium text-gray-700">Quizzes</span>
+                            <span class="text-sm font-medium text-gray-700">${quizzesToday}/${requiredQuizzesPerDay}</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div class="bg-green-600 h-2.5 rounded-full" style="width: ${quizPercent}%"></div>
+                        </div>
+                    </div>
+                `;
+
+                // Overall Status Message (using DB status)
+                if (isQuotaMetToday) {
+                    statusHtml += `
+                        <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
+                            <svg class="w-6 h-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                            </svg>
+                            <p class="font-medium text-green-700">Met! Well done!</p>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            Your dynamic quota completion for today has been recorded.
+                        </p>
+                    `;
+                } else {
+                     statusHtml += `
+                        <div class="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
+                            <svg class="w-6 h-6 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                            <p class="font-medium text-yellow-700">Not yet met. Keep going!</p>
+                        </div>
+                        <p class="mt-2 text-sm text-gray-500">
+                            Complete approximately ${requiredVideosPerDay} videos and ${requiredQuizzesPerDay} quizzes today to meet your dynamic goal.
+                        </p>
+                    `;
+                }
+
+                container.innerHTML = statusHtml;
+
+            } catch (error) {
+                console.error('Error in displayDailyQuotaStatus:', error);
+                 // await updateQuotaMetVisualIndicator(); // Update visual on error
+                container.innerHTML = `
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-red-700">Could not fetch quota status. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        // Function to fetch and display peer quota achievements
+               // Function to fetch and display peer quota achievements
+               async function fetchAndDisplayPeerQuotas() {
+            const tableContainer = document.getElementById('peer-quota-table-container');
+            const loadingEl = document.getElementById('peer-quota-loading');
+            const tableEl = document.getElementById('peer-quota-table');
+
+            // Show loading and clear table
+            loadingEl.style.display = 'block';
+            tableEl.innerHTML = '';
+
+            try {
+                // Fetch usernames
+                const { data: usersData, error: usersError } = await supabaseClient
+                    .from('users')
+                    .select('id, username')
+                    .order('username');
+
+                if (usersError) {
+                    throw new Error(`Error fetching users: ${usersError.message}`);
+                }
+
+                if (!usersData || usersData.length === 0) {
+                    tableEl.innerHTML = `<p class="text-gray-500">No users found in the system.</p>`;
+                    loadingEl.style.display = 'none'; // Hide loading if no users
+                    return;
+                }
+
+                // Fetch quota counts using the RPC function
+                // --- CORRECTION HERE ---
+                const { data: quotaCountsData, error: rpcError } = await supabaseClient
+                    .rpc('get_user_quota_counts');
+                // --- END CORRECTION ---
+
+                if (rpcError) {
+                    // Log the specific RPC error for debugging
+                    console.error("Supabase RPC error fetching quota counts:", rpcError);
+                    throw new Error(`Error fetching quota counts via RPC: ${rpcError.message}`);
+                }
+
+                // Process data from RPC
+                const userQuotaCounts = {};
+
+                // The RPC returns data in the format specified by RETURNS TABLE:
+                // [{ user_id: 1, quota_count: 5 }, { user_id: 2, quota_count: 10 }]
+                if (quotaCountsData && quotaCountsData.length > 0) {
+                    quotaCountsData.forEach(item => {
+                        // Access the count using the column name defined in the SQL function ('quota_count')
+                        userQuotaCounts[item.user_id] = item.quota_count;
+                    });
+                }
+
+                // Create data array for the table
+                const userDataForTable = [];
+
+                usersData.forEach(user => {
+                    const count = userQuotaCounts[user.id] || 0; // Default to 0 if no count found
+                    userDataForTable.push({
+                        username: user.username,
+                        count: count,
+                        userId: user.id // Keep userId if needed for highlighting
+                    });
+                });
+
+                // Sort by count (descending)
+                userDataForTable.sort((a, b) => b.count - a.count);
+
+                // Clear loading message
+                loadingEl.style.display = 'none';
+
+                // Create table HTML (Same as before)
+                let tableHtml = `
+                    <table class="min-w-full bg-white border border-gray-200 rounded-lg overflow-hidden">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
+                                <th class="py-2 px-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Quotas Met</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                `;
+
+                // Add rows for each user (Same as before)
+                userDataForTable.forEach((userData, index) => {
+                    const isCurrentUser = userData.userId === currentUserId;
+                    const rowClass = isCurrentUser ? 'bg-blue-50' : (index % 2 === 0 ? 'bg-gray-50' : 'bg-white');
+                    const textClass = isCurrentUser ? 'font-medium text-blue-800' : '';
+
+                    let starDisplay;
+                    if (userData.count <= 20) {
+                        starDisplay = '⭐'.repeat(userData.count) || '<span class="text-gray-400">0</span>';
+                    } else {
+                        starDisplay = `⭐ × ${userData.count}`;
+                    }
+
+                    tableHtml += `
+                        <tr class="${rowClass}">
+                            <td class="py-2 px-4 text-sm ${textClass}">${userData.username}${isCurrentUser ? ' (you)' : ''}</td>
+                            <td class="py-2 px-4 text-sm ${textClass}">${starDisplay}</td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                        </tbody>
+                    </table>
+                    <p class="mt-2 text-xs text-gray-500">Last updated: ${new Date().toLocaleString()}</p>
+                `;
+
+                tableEl.innerHTML = tableHtml;
+
+            } catch (err) {
+                console.error("Error in fetchAndDisplayPeerQuotas:", err); // Log the caught error
+                tableEl.innerHTML = `
+                    <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <p class="text-red-700">Error fetching peer quota data: ${err.message || 'Unknown error'}</p>
+                    </div>
+                `;
+            } finally {
+                // Hide loading message regardless of success or failure
+                loadingEl.style.display = 'none';
+            }
+        }
     </script>
     
     <!-- React Component -->
@@ -2142,6 +3714,26 @@ Thank you for helping me prepare for my AP Statistics exam!`;
 
         // Render React component
         ReactDOM.render(<APStatLearningFlow />, document.getElementById('learning-flow-app'));
+        
+        // Listen for browser coming back online
+        window.addEventListener('online', function() {
+            console.log("Browser detected online status.");
+            
+            if (currentUserId) {
+                syncOfflineQueue();
+            } else {
+                console.log("User not identified, cannot sync yet.");
+            }
+        });
     </script>
+    
+    <!-- QR Code Section -->
+    <div class="my-4 flex flex-col items-center">
+        <div id="qrcode-container" class="p-2 bg-white border border-gray-300 rounded-lg shadow-sm inline-block">
+            <!-- QR code will be rendered here -->
+        </div>
+        <p class="text-xs text-gray-500 mt-1">Scan for page link</p>
+    </div>
+    <!-- End QR Code Section -->
 </body>
 </html> 
