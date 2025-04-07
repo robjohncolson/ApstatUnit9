@@ -2370,8 +2370,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit9/9.2_quiz.pdf",
-                answersPdf: "pdfs/unit9/9.2_quiz_answer.pdf",
+                questionPdf: "pdfs/unit9/9-2_quiz.pdf",
+                answersPdf: "pdfs/unit9/9-2_quiz_answer.pdf",
                 quizId: "9-2_q1",
                 completed: false,
                 completionDate: null
@@ -2399,8 +2399,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit9/9.3_quiz.pdf",
-                answersPdf: "pdfs/unit9/9.3_quiz_answer.pdf",
+                questionPdf: "pdfs/unit9/9-3_quiz.pdf",
+                answersPdf: "pdfs/unit9/9-3_quiz_answer.pdf",
                 quizId: "9-3_q1",
                 completed: false,
                 completionDate: null
@@ -2428,8 +2428,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit9/9.4_quiz.pdf",
-                answersPdf: "pdfs/unit9/9.4_quiz_answer.pdf",
+                questionPdf: "pdfs/unit9/9-4_quiz.pdf",
+                answersPdf: "pdfs/unit9/9-4_quiz_answer.pdf",
                 quizId: "9-4_q1",
                 completed: false,
                 completionDate: null
@@ -2463,8 +2463,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit9/9.5_quiz.pdf",
-                answersPdf: "pdfs/unit9/9.5_quiz_answer.pdf",
+                questionPdf: "pdfs/unit9/9-5_quiz.pdf",
+                answersPdf: "pdfs/unit9/9-5_quiz_answer.pdf",
                 quizId: "9-5_q1",
                 completed: false,
                 completionDate: null
@@ -2484,15 +2484,7 @@ const ALL_UNITS_DATA = [
                 completionDate: null
             }
         ],
-        quizzes: [
-            {
-                questionPdf: "pdfs/unit9/9.6_quiz.pdf",
-                answersPdf: "pdfs/unit9/9.6_quiz_answer.pdf",
-                quizId: "9-6_q1",
-                completed: false,
-                completionDate: null
-            }
-        ],
+        quizzes: [],
         current: false
       },
       {
