@@ -600,8 +600,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit3/SG_IntroductiontoPlanningaStudyQuiz_67ed7862e9f788.67ed7863ce0d9.6333439.pdf",
-                answersPdf: "pdfs/unit3/TB_IntroductiontoPlanningaStudyQuiz_67ed785f8e4a60.67ed7860344f5.2544315.pdf",
+                questionPdf: "pdfs/unit3/3.2_quiz.pdf",
+                answersPdf: "pdfs/unit3/3.2_answers.pdf",
                 quizId: "3-2_q1",
                 completed: false,
                 completionDate: null
@@ -629,8 +629,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit3/SG_RandomSamplingandDataCollectionQuiz_67ed78f2216a34.67ed78f302c6a5.4973333.pdf",
-                answersPdf: "pdfs/unit3/TB_RandomSamplingandDataCollectionQuiz_67ed78ea507697.67ed78eb2038b0.8555752.pdf",
+                questionPdf: "pdfs/unit3/3.3_quiz.pdf",
+                answersPdf: "pdfs/unit3/3.3_answers.pdf",
                 quizId: "3-3_q1",
                 completed: false,
                 completionDate: null
@@ -652,8 +652,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit3/SG_PotentialProblemswithSamplingQuiz_67ed7942a450e4.67ed79436c94a2.48703364.pdf",
-                answersPdf: "pdfs/unit3/TB_PotentialProblemswithSamplingQuiz_67ed793fc28806.67ed794035a845.79987459.pdf",
+                questionPdf: "pdfs/unit3/3.4_quiz.pdf",
+                answersPdf: "pdfs/unit3/3.4_answers.pdf",
                 quizId: "3-4_q1",
                 completed: false,
                 completionDate: null
@@ -687,8 +687,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit3/SG_IntroductiontoExperimentalDesignQuiz_67ed799df05525.67ed799f25adc3.77006949.pdf",
-                answersPdf: "pdfs/unit3/TB_IntroductiontoExperimentalDesignQuiz_67ed7998e68223.67ed7999f01ee5.92663853.pdf",
+                questionPdf: "pdfs/unit3/3.5_quiz.pdf",
+                answersPdf: "pdfs/unit3/3.5_answers.pdf",
                 quizId: "3-5_q1",
                 completed: false,
                 completionDate: null
@@ -716,8 +716,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit3/SG_SelectinganExperimentalDesignQuiz_67ed7abb484c29.67ed7abc357250.27255578.pdf",
-                answersPdf: "pdfs/unit3/TB_SelectinganExperimentalDesignQuiz_67ed7abb7657df2.67ed7abb8451744.64013475.pdf",
+                questionPdf: "pdfs/unit3/3.6_quiz.pdf",
+                answersPdf: "pdfs/unit3/3.6_answers.pdf",
                 quizId: "3-6_q1",
                 completed: false,
                 completionDate: null
@@ -739,8 +739,8 @@ const ALL_UNITS_DATA = [
         ],
         quizzes: [
             {
-                questionPdf: "pdfs/unit3/SG_InferenceandExperimentsQuiz_67ed7b61adfe48.67edb627ed8b6.72061701.pdf",
-                answersPdf: "pdfs/unit3/TB_InferenceandExperimentsQuiz_67ed7b5e64486.67ed7b5f2dcab8.71661777.pdf",
+                questionPdf: "pdfs/unit3/3.7_quiz.pdf",
+                answersPdf: "pdfs/unit3/3.7_answers.pdf",
                 quizId: "3-7_q1",
                 completed: false,
                 completionDate: null
@@ -755,21 +755,21 @@ const ALL_UNITS_DATA = [
         videos: [],
         quizzes: [
             {
-                questionPdf: "pdfs/unit3/SG_Unit3ProgressCheckFRQ_67ed7bb47d8944.67ed7bb577594.08418721.pdf",
-                answersPdf: "pdfs/unit3/TB_Unit3ProgressCheckFRQ_67ed7bb0d797c7.67ed7bb1a36dc1.35481320.pdf",
+                questionPdf: "pdfs/unit3/unit3_pc_frq_quiz.pdf",
+                answersPdf: "pdfs/unit3/unit3_pc_frq_answers.pdf",
                 quizId: "3-capstone_q1",
                 completed: false,
                 completionDate: null
             },
             {
-                questionPdf: "pdfs/unit3/SG_Unit3ProgressCheckMCQPartA_67ed7bbc567e33.67ed7bbc45c004.61577643.pdf",
+                questionPdf: "pdfs/unit3/unit3_pc_mcq_parta_answers.pdf",
                 answersPdf: null,
                 quizId: "3-capstone_q2",
                 completed: false,
                 completionDate: null
             },
             {
-                questionPdf: "pdfs/unit3/SG_Unit3ProgressCheckMCQPartB_67ed7bbe9df329.67ed7bbfa0dab9.68126227.pdf",
+                questionPdf: "pdfs/unit3/unit3_pc_mcq_partb_answers.pdf",
                 answersPdf: null,
                 quizId: "3-capstone_q3",
                 completed: false,
