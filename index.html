@@ -320,8 +320,8 @@ async function updateQuotaMetVisualIndicator() {
 
     try {
         // ***** ADD A SMALL DELAY *****
-        console.log('GH_DEBUG (VisualIndicator): Waiting 250ms before SELECT...');
-        await sleep(250); // Wait for 250 milliseconds
+        console.log('GH_DEBUG (VisualIndicator): Waiting 750ms before SELECT...');
+        await sleep(750); // Wait for 250 milliseconds
 
         console.log('GH_DEBUG (VisualIndicator): EXECUTING supabaseClient.from(daily_quotas_met).select()...');
         const { data, error } = await supabaseClient
