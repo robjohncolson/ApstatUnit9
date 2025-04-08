@@ -1651,7 +1651,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                         <div class="flex items-center">
                             <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 116 0z" clip-rule="evenodd"></path>
-                        </svg>
+                            </svg>
                             <span>Complete all other topics first!</span>
                     </div>
                     </div>
@@ -1994,6 +1994,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                 console.log('DEBUG (QuotaCheck): Cannot check daily quota without user ID.');
                 // Remove class if no user is logged in (redundant with updateQuotaMetVisualIndicator, but safe)
                 // document.body.classList.remove('quota-met-today');
+                await updateQuotaMetVisualIndicator(); // Add await here too
                 return;
             }
 
@@ -2100,11 +2101,12 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             }
             // Update visual indicator at the very end, reflecting the final state
             await updateQuotaMetVisualIndicator();
+            console.log('DEBUG (QuotaCheck): Finished check and triggered visual update.');
         }
         
         // Function to mark all videos and quizzes in a topic as completed
                 // Function to mark all videos and quizzes in a topic as completed
-                function markTopicAsCompleted(topicId) {
+                async function markTopicAsCompleted(topicId) {
             const topic = pdfFiles.find(t => t.id === topicId);
             if (!topic) return;
 
@@ -2161,7 +2163,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                 // Use Promise.allSettled to attempt all saves even if some fail
                 Promise.allSettled(itemsToSave.map(item =>
                     saveCompletionToSupabase(item.type, item.identifier, UNIT_ID)
-                )).then(results => {
+                )).then(async results => {
                     // Log results (optional)
                     results.forEach((result, index) => {
                         const item = itemsToSave[index];
@@ -2173,7 +2175,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                     });
                      // Check quota AFTER attempting Supabase saves
                      console.log(`DEBUG (markTopic): Triggering quota check after Supabase saves.`);
-                     checkDailyQuotaCompletion();
+                     await checkDailyQuotaCompletion();
                 });
             } else if (itemsToSave.length > 0) {
                 // If no user ID, we rely on the local storage update and potential future sync
@@ -2181,12 +2183,12 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                 // Check local quota based on local state change if needed (though checkDailyQuotaCompletion primarily uses Supabase now)
                 // checkDailyQuotaCompletion(); // Maybe call this anyway if you want local visual updates? It might double-trigger if Supabase succeeds later.
                  console.log(`DEBUG (markTopic): Triggering quota check even without Supabase saves (may rely on local logic if implemented).`);
-                 checkDailyQuotaCompletion(); // Call it regardless to update visuals based on fetched data
+                 await checkDailyQuotaCompletion(); // Call it regardless to update visuals based on fetched data
             } else {
                  console.log(`DEBUG (markTopic): No new items were marked complete.`);
                  // Check quota anyway, in case this function is called when topic already complete
                  console.log(`DEBUG (markTopic): Triggering quota check (topic might have been already complete).`);
-                 checkDailyQuotaCompletion();
+                 await checkDailyQuotaCompletion();
             }
 
 
