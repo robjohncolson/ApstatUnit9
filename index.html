@@ -299,55 +299,59 @@
     
     <!-- Scripts -->
     <script>
-                // Function to check quota status and apply/remove visual indicator
-                async function updateQuotaMetVisualIndicator() {
-                    console.log('GH_DEBUG (VisualIndicator): ENTERING function. User ID:', currentUserId); // ADDED MORE DETAIL
-                    if (!currentUserId) {
+                // Utility function for a simple delay
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function updateQuotaMetVisualIndicator() {
+    console.log('GH_DEBUG (VisualIndicator): ENTERING function. User ID:', currentUserId);
+
+    if (!currentUserId) {
         console.log('GH_DEBUG (VisualIndicator): No user ID, removing class.');
         document.body.classList.remove('quota-met-today');
         return;
     }
 
-            // Get today's UTC date string
-            const todayUTC = new Date();
+    // Get today's UTC date string
+    const todayUTC = new Date();
     const todayDateString = new Date(Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), todayUTC.getUTCDate())).toISOString().split('T')[0];
-    console.log('GH_DEBUG (VisualIndicator): Preparing to query Supabase for quota date:', todayDateString, 'User ID:', currentUserId); // MODIFIED LOG
+    console.log('GH_DEBUG (VisualIndicator): Preparing to query Supabase for quota date:', todayDateString, 'User ID:', currentUserId);
 
     try {
-        // ***** ADD LOGGING RIGHT BEFORE THE CALL *****
-        console.log('GH_DEBUG (VisualIndicator): EXECUTING supabaseClient.from(daily_quotas_met).select()...');
+        // ***** ADD A SMALL DELAY *****
+        console.log('GH_DEBUG (VisualIndicator): Waiting 250ms before SELECT...');
+        await sleep(250); // Wait for 250 milliseconds
 
+        console.log('GH_DEBUG (VisualIndicator): EXECUTING supabaseClient.from(daily_quotas_met).select()...');
         const { data, error } = await supabaseClient
             .from('daily_quotas_met')
-            .select('id') // Select a minimal column
+            .select('id')
             .eq('user_id', currentUserId)
             .eq('quota_date', todayDateString)
-            .maybeSingle(); // Returns the record or null
+            .maybeSingle();
 
-        // ***** ADD LOGGING RIGHT AFTER THE CALL *****
         console.log('GH_DEBUG (VisualIndicator): Supabase SELECT response:', { data, error });
 
         if (error) {
             console.error('GH_DEBUG (VisualIndicator): Error during SELECT query:', error);
-            document.body.classList.remove('quota-met-today'); // Remove on error
+            document.body.classList.remove('quota-met-today');
             return;
         }
 
-        // ***** ADD LOGGING TO SEE WHAT data CONTAINS *****
         if (data) {
-            console.log('GH_DEBUG (VisualIndicator): SELECT found data. Record ID:', data.id, 'Applying class.'); // Log the ID if found
+            console.log('GH_DEBUG (VisualIndicator): SELECT found data. Record ID:', data.id, 'Applying class.');
             document.body.classList.add('quota-met-today');
         } else {
-            // It's possible 'data' is null here if maybeSingle() finds nothing
             console.log('GH_DEBUG (VisualIndicator): SELECT did NOT find data (data is null or undefined). Removing class.');
             document.body.classList.remove('quota-met-today');
         }
 
     } catch (err) {
         console.error('GH_DEBUG (VisualIndicator): CATCH block: Exception during Supabase SELECT attempt:', err);
-        document.body.classList.remove('quota-met-today'); // Remove on exception
+        document.body.classList.remove('quota-met-today');
     }
-    console.log('GH_DEBUG (VisualIndicator): EXITING function.'); // ADDED
+    console.log('GH_DEBUG (VisualIndicator): EXITING function.');
 }
         // In Unit 1's index.html
         const UNIT_ID = '9';
