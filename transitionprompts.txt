@@ -1,0 +1,20 @@
+1
+Do not modify allUnitsData.js, do not modify any existing file.
+
+Take a look at ALL_UNITS_DATA array @allUnitsData.js   and create a snippet  where the old refernces to the pdf's are replaced with the new standardized filenames.@ls-output.txt 
+
+Create a code snippet where you have an identically formatted block of javascript code as what is in allUnitsData.js.  The code should cover only unit 9.  Replace all unit 9 pdf filename references with the new ones.  Output the code snippet.
+
+2
+@index.html  is based on unit3 material, but the material we have is for unit 9.  @knowledge-tree.md 
+
+Please replace all references of Unit 3 to unit 9.
+
+Restrict modifcations to index.html!
+
+unit 9's AP exam weight is 2-5%
+
+3
+Now let's focus on capstone in @index.html.  The buttons gotta match where they head to.  if the button is mated to an FRQ answer, let the button express that.  If it's mated to an MCQ part A answer, let it say that!
+make python scripts that do not modify any files, to help.
+Focus only on index.html
