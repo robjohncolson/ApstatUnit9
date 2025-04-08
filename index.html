@@ -2070,13 +2070,18 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                             .from('daily_quotas_met')
                             .insert({ user_id: currentUserId, quota_date: todayDateString });
 
-                        if (insertError && insertError.code !== '23505') { // Ignore unique violation, log others
-                            console.error('Error logging quota completion:', insertError);
-                        } else if (!insertError) {
-                             console.log('DEBUG (QuotaCheck - DB): Daily flexible quota met and logged successfully.');
-                        } else {
-                             console.log('DEBUG (QuotaCheck - DB): Quota already logged for today (Unique constraint violation).');
-                        }
+                            if (insertError) {
+        // Check if it's the expected unique constraint violation (conflict)
+        if (insertError.code === '23505') {
+            console.log('DEBUG (QuotaCheck - DB): Quota already logged for today (Caught 409 Conflict).');
+            // Treat as success for UI update purposes, record is already there.
+        } else {
+            // Log other unexpected errors
+            console.error('Error logging quota completion:', insertError);
+        }
+    } else {
+         console.log('DEBUG (QuotaCheck - DB): Daily flexible quota met and logged successfully.');
+    }
                     } else if (!quotaMetNow && recordExists) {
                         console.log("DEBUG (QuotaCheck - DB): Attempting to DELETE quota record...");
                         const { error: deleteError } = await supabaseClient
@@ -2092,6 +2097,8 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                     } else {
                          console.log("DEBUG (QuotaCheck - DB): No change needed for DB quota status.");
                     }
+                    await updateQuotaMetVisualIndicator();
+console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.');
 
                  } catch (quotaManageError) {
                     console.error('Error during quota status management:', quotaManageError);
