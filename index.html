@@ -300,6 +300,7 @@
     <!-- Scripts -->
     <script>
                 // Utility function for a simple delay
+// Utility function for a simple delay (Needs to be defined)
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -313,43 +314,66 @@ async function updateQuotaMetVisualIndicator() {
         return;
     }
 
-    // Get today's UTC date string
     const todayUTC = new Date();
     const todayDateString = new Date(Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), todayUTC.getUTCDate())).toISOString().split('T')[0];
     console.log('GH_DEBUG (VisualIndicator): Preparing to query Supabase for quota date:', todayDateString, 'User ID:', currentUserId);
 
     try {
-        // ***** ADD A SMALL DELAY *****
-        console.log('GH_DEBUG (VisualIndicator): Waiting 750ms before SELECT...');
-        await sleep(750); // Wait for 250 milliseconds
+        let data = null;
+        let error = null;
+        let attempts = 0;
+        const maxAttempts = 3; // Try up to 3 times
+        const retryDelay = 350; // Wait 350ms between retries (slightly increased)
 
-        console.log('GH_DEBUG (VisualIndicator): EXECUTING supabaseClient.from(daily_quotas_met).select()...');
-        const { data, error } = await supabaseClient
-            .from('daily_quotas_met')
-            .select('id')
-            .eq('user_id', currentUserId)
-            .eq('quota_date', todayDateString)
-            .maybeSingle();
+        while (!data && attempts < maxAttempts) {
+            attempts++;
+            console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts}/${maxAttempts} - EXECUTING select...`);
 
-        console.log('GH_DEBUG (VisualIndicator): Supabase SELECT response:', { data, error });
+            // Don't wait before the FIRST attempt, only between retries
+            if (attempts > 1) {
+               console.log(`GH_DEBUG (VisualIndicator): Waiting ${retryDelay}ms before retry ${attempts}...`);
+               await sleep(retryDelay);
+            }
 
-        if (error) {
-            console.error('GH_DEBUG (VisualIndicator): Error during SELECT query:', error);
-            document.body.classList.remove('quota-met-today');
-            return;
+            const response = await supabaseClient
+                .from('daily_quotas_met')
+                .select('id')
+                .eq('user_id', currentUserId)
+                .eq('quota_date', todayDateString)
+                .maybeSingle(); // Keep using maybeSingle
+
+            data = response.data;
+            error = response.error;
+
+            console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts} response:`, { data, error });
+
+            if (error) {
+                console.error(`GH_DEBUG (VisualIndicator): Error during SELECT query on attempt ${attempts}:`, error);
+                // Optionally break only on specific errors, otherwise allow retry? For now, break on any error.
+                break;
+            }
+
+            // No need to wait if data WAS found or if it was the last attempt
+            // The loop condition handles stopping
         }
 
-        if (data) {
-            console.log('GH_DEBUG (VisualIndicator): SELECT found data. Record ID:', data.id, 'Applying class.');
+
+        // Now check the final result after retries
+        if (error) {
+             console.error('GH_DEBUG (VisualIndicator): Final check - Error occurred during SELECT attempts.');
+             document.body.classList.remove('quota-met-today');
+        } else if (data) {
+            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT found data. Record ID:', data.id, 'Applying class.');
             document.body.classList.add('quota-met-today');
         } else {
-            console.log('GH_DEBUG (VisualIndicator): SELECT did NOT find data (data is null or undefined). Removing class.');
+            // data is null and no error occurred after maxAttempts
+            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT did NOT find data after all retries. Removing class.');
             document.body.classList.remove('quota-met-today');
         }
 
     } catch (err) {
-        console.error('GH_DEBUG (VisualIndicator): CATCH block: Exception during Supabase SELECT attempt:', err);
-        document.body.classList.remove('quota-met-today');
+       console.error('GH_DEBUG (VisualIndicator): CATCH block: Exception during Supabase SELECT attempt:', err);
+       document.body.classList.remove('quota-met-today');
     }
     console.log('GH_DEBUG (VisualIndicator): EXITING function.');
 }
