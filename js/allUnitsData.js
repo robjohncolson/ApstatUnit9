@@ -2491,14 +2491,12 @@ const ALL_UNITS_DATA = [
                 completionDate: null
             },
             {
-                questionPdf: "pdfs/unit9/unit9_pc_mcq_partA_answers.pdf",
                 answersPdf: "pdfs/unit9/unit9_pc_mcq_partA_answers.pdf",
                 quizId: "9-capstone_q2",
                 completed: false,
                 completionDate: null
             },
             {
-                questionPdf: "pdfs/unit9/unit9_pc_mcq_partB_answers.pdf",
                 answersPdf: "pdfs/unit9/unit9_pc_mcq_partB_answers.pdf",
                 quizId: "9-capstone_q3",
                 completed: false,
