@@ -1357,14 +1357,14 @@ Thank you for helping me prepare for my AP Statistics exam!`;
               completionDate: null
           },
           {
-              questionPdf: "pdfs/unit9/unit9_pc_mcq_partA_answers.pdf",
+
               answersPdf: "pdfs/unit9/unit9_pc_mcq_partA_answers.pdf",
               quizId: "9-capstone_q2",
               completed: false,
               completionDate: null
           },
           {
-              questionPdf: "pdfs/unit9/unit9_pc_mcq_partB_answers.pdf",
+
               answersPdf: "pdfs/unit9/unit9_pc_mcq_partB_answers.pdf",
               quizId: "9-capstone_q3",
               completed: false,
@@ -1437,7 +1437,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                             if (quiz.quizId === "9-capstone_q1") {
                                 linkText = "FRQ Questions";
                             } else if (quiz.quizId === "9-capstone_q2") {
-                                linkText = "MCQ Part A Questions";
+                                linkText = "MCQ Part A Answers";
                             } else if (quiz.quizId === "9-capstone_q3") {
                                 linkText = "MCQ Part B Questions";
                             }
@@ -2683,7 +2683,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                     currentTopic.quizzes.forEach((quiz, index) => {
                         if (quiz.questionPdf) {
                             const questionTitle = currentTopic.isCapstone && currentTopic.quizzes.length > 1 
-                                ? (quiz.quizId === "9-capstone_q1" ? "FRQ Questions" : quiz.quizId === "9-capstone_q2" ? "MCQ Part A Questions" : "MCQ Part B Questions")
+                                ? (quiz.quizId === "9-capstone_q1" ? "FRQ Questions" : quiz.quizId === "9-capstone_q2" ? "MCQ Part A Answers" : "MCQ Part B Questions")
                                 : (currentTopic.isCapstone ? "FRQ Questions" : "Download Questions PDF");
                             
                             quizLinksHTML += `
@@ -2958,7 +2958,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                     capstoneTopic.quizzes.forEach((quiz, index) => {
                         if (quiz.questionPdf) {
                             const title = quiz.quizId === "9-capstone_q1" ? "FRQ Questions" : 
-                                          quiz.quizId === "9-capstone_q2" ? "MCQ Part A Questions" : "MCQ Part B Questions";
+                                          quiz.quizId === "9-capstone_q2" ? "MCQ Part A Answers" : "MCQ Part B Questions";
                             
                             capstoneQuizLinksHTML += `
                             <div class="flex items-center mb-2">
@@ -3081,7 +3081,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
                 topic.quizzes.forEach((quiz, index) => {
                     if (quiz.questionPdf) {
                         const linkText = topic.isCapstone && topic.quizzes.length > 1
-                            ? (quiz.quizId === "9-capstone_q1" ? "FRQ Questions" : quiz.quizId === "9-capstone_q2" ? "MCQ Part A Questions" : "MCQ Part B Questions")
+                            ? (quiz.quizId === "9-capstone_q1" ? "FRQ Questions" : quiz.quizId === "9-capstone_q2" ? "MCQ Part A Answers" : "MCQ Part B Questions")
                             : (topic.isCapstone ? "FRQ Questions" : "Questions PDF");
                         
                         linksHTML += `
