@@ -325,76 +325,40 @@ async function updateQuotaMetVisualIndicator() {
         return;
     }
 
+    // Use consistent UTC date string calculation
     const todayUTC = new Date();
     const todayDateString = new Date(Date.UTC(todayUTC.getUTCFullYear(), todayUTC.getUTCMonth(), todayUTC.getUTCDate())).toISOString().split('T')[0];
-    console.log('GH_DEBUG (VisualIndicator): Preparing to query Supabase for quota date:', todayDateString, 'User ID:', currentUserId);
+
+    // Log the exact values being used in the query
+    console.log('GH_DEBUG (VisualIndicator): Preparing query for quota date:', todayDateString, 'User ID:', currentUserId);
 
     try {
-        let data = null;
-        let error = null;
-        let attempts = 0;
-        const maxAttempts = 3; // Try up to 3 times
-        const retryDelay = 350; // Wait 350ms between retries
-        let foundRecord = false; // Add this new flag for tracking success
+        // Use maybeSingle for consistency
+        const { data, error } = await supabaseClient
+            .from('daily_quotas_met')
+            .select('id') // Select any column
+            .eq('user_id', currentUserId)
+            .eq('quota_date', todayDateString)
+            .maybeSingle(); // Returns the single row object or null
 
-        while (!foundRecord && attempts < maxAttempts) {
-            attempts++;
-            console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts}/${maxAttempts} - EXECUTING select...`);
+        // Log the raw response
+        console.log('GH_DEBUG (VisualIndicator): Query response:', { data, error });
 
-            // Don't wait before the FIRST attempt, only between retries
-            if (attempts > 1) {
-               console.log(`GH_DEBUG (VisualIndicator): Waiting ${retryDelay}ms before retry ${attempts}...`);
-               await sleep(retryDelay); // Uses the sleep function added in Step 1
-            }
-
-            // *** Use .select() instead of .maybeSingle() ***
-            const { data: queryResultData, error: queryResultError } = await supabaseClient
-                .from('daily_quotas_met')
-                .select('id', { head: false }) // Just select id
-                .eq('user_id', currentUserId)
-                .eq('quota_date', todayDateString);
-                // No limit needed, we check the array
-
-            console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts} response:`, { data: queryResultData, error: queryResultError });
-
-            // Check for actual Supabase errors first
-            if (queryResultError) {
-                console.error(`GH_DEBUG (VisualIndicator): Error during SELECT query on attempt ${attempts}:`, queryResultError);
-                error = queryResultError; // Store the error to handle after the loop
-                break; // Stop retrying on error
-            }
-
-            // Check if the query returned any rows (success case)
-            if (queryResultData && queryResultData.length > 0) {
-                console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts} found ${queryResultData.length} record(s). Setting foundRecord flag.`);
-                foundRecord = true; // Set flag indicating success
-                data = queryResultData[0]; // Store the first record's data (like the ID)
-                // Loop will terminate because foundRecord is now true
-            }
-            // If queryResultData is null or empty, and no error, the loop continues (if attempts remain)
-            // The wait condition is handled at the start of the loop for attempts > 1
-
-            // No need to wait if data WAS found or if it was the last attempt
-            // The loop condition handles stopping
-        }
-
-
-        // Now check the final result after retries
         if (error) {
-             console.error('GH_DEBUG (VisualIndicator): Final check - Error occurred during SELECT attempts.');
-             document.body.classList.remove('quota-met-today');
-        } else if (foundRecord) {
-            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT found record after retries. Applying class.');
-            // 'data' variable should hold the record (e.g., data.id) if needed for logging
+            console.error('GH_DEBUG (VisualIndicator): Error during SELECT query:', error);
+            document.body.classList.remove('quota-met-today'); // Assume not met on error
+        } else if (data) {
+            // 'data' is the row object if found, null otherwise
+            console.log('GH_DEBUG (VisualIndicator): SELECT found record. Applying class.');
             document.body.classList.add('quota-met-today');
         } else {
-            // Loop finished all attempts without finding a record and without error
-            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT did NOT find record after all retries. Removing class.');
+            // 'data' is null, meaning no record found
+            console.log('GH_DEBUG (VisualIndicator): SELECT did NOT find record. Removing class.');
             document.body.classList.remove('quota-met-today');
         }
 
     } catch (err) {
-       console.error('GH_DEBUG (VisualIndicator): CATCH block: Exception during Supabase SELECT attempt:', err);
+       console.error('GH_DEBUG (VisualIndicator): CATCH block: Exception during SELECT attempt:', err);
        document.body.classList.remove('quota-met-today');
     }
     console.log('GH_DEBUG (VisualIndicator): EXITING function.');
@@ -2048,142 +2012,148 @@ Thank you for helping me prepare for my AP Statistics exam!`;
         async function _performQuotaCheck() {
             console.log("DEBUG (_performQuotaCheck): Debounced check running...");
             if (!currentUserId) {
-        console.log('DEBUG (QuotaCheck): Cannot check daily quota without user ID.');
-        await updateQuotaMetVisualIndicator(); // Still update visual even if no user check done
-        return;
-    }
-
-    console.log('DEBUG (QuotaCheck): Calculating dynamic quota targets...');
-    const { requiredVideosPerDay, requiredQuizzesPerDay, error: quotaError } = await calculateDynamicQuota();
-
-            if (quotaError) {
-                console.error(`DEBUG (QuotaCheck): Failed to calculate dynamic quota: ${quotaError}. Aborting check.`);
-                // Update visual indicator to remove 'met' status if calculation fails
+                console.log('DEBUG (QuotaCheck): Cannot check daily quota without user ID.');
+                // Ensure visual consistency when no user
+                document.body.classList.remove('quota-met-today'); // Remove class if no user
+                // We might still call the visual indicator update in case it was previously set
                 await updateQuotaMetVisualIndicator();
                 return;
             }
-             console.log(`DEBUG (QuotaCheck): Dynamic targets: Videos=${requiredVideosPerDay}, Quizzes=${requiredQuizzesPerDay}`);
+
+            console.log('DEBUG (QuotaCheck): Calculating dynamic quota targets...');
+            const { requiredVideosPerDay, requiredQuizzesPerDay, error: quotaError } = await calculateDynamicQuota();
+
+            if (quotaError) {
+                console.error(`DEBUG (QuotaCheck): Failed to calculate dynamic quota: ${quotaError}. Aborting check.`);
+                // Ensure visual reflects calculation failure
+                document.body.classList.remove('quota-met-today');
+                await updateQuotaMetVisualIndicator(); // Update display based on failed calc state
+                return;
+            }
+            console.log(`DEBUG (QuotaCheck): Dynamic targets: Videos=${requiredVideosPerDay}, Quizzes=${requiredQuizzesPerDay}`);
 
 
             // Get today's date boundaries using UTC
             const now = new Date();
-    const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-    const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
-    const todayDateString = startOfDayUTC.toISOString().split('T')[0];
+            const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+            const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+            const todayDateString = startOfDayUTC.toISOString().split('T')[0];
 
-    console.log(`DEBUG: Checking completions for UTC date ${todayDateString} from ${startOfDayUTC.toISOString()} to ${endOfDayUTC.toISOString()}`);
+            console.log(`DEBUG: Checking completions for UTC date ${todayDateString} from ${startOfDayUTC.toISOString()} to ${endOfDayUTC.toISOString()}`);
 
-    try {
-        const { data, error } = await supabaseClient
-            .from('completions')
-            .select('item_type')
-            .eq('user_id', currentUserId)
-            .gte('completed_at', startOfDayUTC.toISOString())
-            .lte('completed_at', endOfDayUTC.toISOString());
-                if (error) {
-                    console.error('Error fetching today\'s completions:', error);
-                     await updateQuotaMetVisualIndicator(); // Update visual on error
-                    return;
+            try {
+                // Fetch completions (best effort)
+                const { data: completionsData, error: completionsError } = await supabaseClient
+                    .from('completions')
+                    .select('item_type')
+                    .eq('user_id', currentUserId)
+                    .gte('completed_at', startOfDayUTC.toISOString())
+                    .lte('completed_at', endOfDayUTC.toISOString());
+
+                if (completionsError) {
+                    console.error('Error fetching today\'s completions:', completionsError);
+                    // Continue, but counts will be 0
                 }
 
-                // Count videos and quizzes completed today
-                const videosToday = data ? data.filter(item => item.item_type === 'video').length : 0;
-                const quizzesToday = data ? data.filter(item => item.item_type === 'quiz').length : 0;
-
+                const videosToday = completionsData ? completionsData.filter(item => item.item_type === 'video').length : 0;
+                const quizzesToday = completionsData ? completionsData.filter(item => item.item_type === 'quiz').length : 0;
                 console.log(`DEBUG (QuotaCheck): Fetched counts for today: Videos=${videosToday}, Quizzes=${quizzesToday}`);
 
-                // --- Check if Quota is Met Now using DYNAMIC targets ---
                 const quotaMetNow = videosToday >= requiredVideosPerDay && quizzesToday >= requiredQuizzesPerDay;
                 console.log(`DEBUG: Quota met now (dynamic)? ${quotaMetNow}`);
 
-
-                // Query Existing Status and Update Logic
+                // Query Existing Status (best effort read)
+                let recordExists = false; // Assume false initially
                 try {
-                    let quotaStatusResult = null;
-                    let attempts = 0;
-                    const maxAttempts = 3; // Try up to 3 times
-                    const retryDelay = 350; // Wait 350ms between retries
+                    const { data: quotaStatusData, error: quotaStatusError } = await supabaseClient
+                        .from('daily_quotas_met')
+                        .select('id') // <-- Line Changed Here
+                        .eq('user_id', currentUserId)
+                        .eq('quota_date', todayDateString)
+                        .maybeSingle(); // Keep maybeSingle
 
-                    while (attempts < maxAttempts) {
-                        attempts++;
-                        console.log(`DEBUG (QuotaCheck): Status check attempt ${attempts}/${maxAttempts}`);
-                        
-                        // Add delay between retries
-                        if (attempts > 1) {
-                            console.log(`DEBUG (QuotaCheck): Waiting ${retryDelay}ms before retry...`);
-                            await sleep(retryDelay);
-                        }
-                        
-                        quotaStatusResult = await supabaseClient
-                            .from('daily_quotas_met')
-                            .select('id')
-                            .eq('user_id', currentUserId)
-                            .eq('quota_date', todayDateString)
-                            .maybeSingle();
-                            
-                        if (!quotaStatusResult.error) {
-                            console.log(`DEBUG (QuotaCheck): Status check successful on attempt ${attempts}`);
-                            break; // Exit loop on success
-                        } else {
-                            console.error(`DEBUG (QuotaCheck): Error on attempt ${attempts}:`, quotaStatusResult.error);
-                        }
+                    if (quotaStatusError) {
+                        console.warn('WARN (QuotaCheck): Could not reliably check existing quota record:', quotaStatusError.message);
+                        // Proceed cautiously, might attempt insert even if record exists
+                    } else {
+                        recordExists = (quotaStatusData !== null);
+                        console.log(`DEBUG (QuotaCheck - DB Read): Record exists for today? ${recordExists}`);
                     }
+                } catch (readError) {
+                    console.error('ERROR (QuotaCheck): Exception during quota status read:', readError);
+                     // Proceed cautiously
+                }
 
-                    if (quotaStatusResult.error) {
-                        console.error('Error checking quota status after all retries:', quotaStatusResult.error);
-                        await updateQuotaMetVisualIndicator(); // Ensure visual is updated on error
-                        return; // Don't proceed if we can't check current status
-                    }
 
-                    const recordExists = quotaStatusResult.data !== null;
-                    console.log(`DEBUG (QuotaCheck - DB): Record exists for today? ${recordExists}`);
-
-                    // Logic for Insert/Delete/No Change
-                    if (quotaMetNow && !recordExists) {
-                        console.log("DEBUG (QuotaCheck - DB): Attempting to INSERT quota record...");
+                // --- Core Logic: Attempt Write/Delete and Set UI based on ACTION outcome ---
+                if (quotaMetNow) {
+                    // We believe the quota is met, ensure the record exists
+                    if (!recordExists) {
+                        // Attempt to INSERT because our read didn't find it
+                        console.log("DEBUG (QuotaCheck - DB): Attempting to INSERT quota record (as read found none)...");
                         const { error: insertError } = await supabaseClient
                             .from('daily_quotas_met')
                             .insert({ user_id: currentUserId, quota_date: todayDateString });
 
-                            if (insertError) {
-        // Check if it's the expected unique constraint violation (conflict)
-        if (insertError.code === '23505') {
-            console.log('DEBUG (QuotaCheck - DB): Quota already logged for today (Caught 409 Conflict).');
-            // Treat as success for UI update purposes, record is already there.
-        } else {
-            // Log other unexpected errors
-            console.error('Error logging quota completion:', insertError);
-        }
-    } else {
-         console.log('DEBUG (QuotaCheck - DB): Daily flexible quota met and logged successfully.');
-    }
-                    } else if (!quotaMetNow && recordExists) {
-                        console.log("DEBUG (QuotaCheck - DB): Attempting to DELETE quota record...");
+                        if (insertError) {
+                            const isConflict = insertError.code === '23505' || (insertError.message && insertError.message.includes('duplicate key value violates unique constraint'));
+                            if (isConflict) {
+                                console.log('DEBUG (QuotaCheck - DB): INSERT failed with Conflict (409). Record MUST exist.');
+                                // *** UI UPDATE: Trust the conflict ***
+                                document.body.classList.add('quota-met-today');
+                            } else {
+                                console.error(`DEBUG (QuotaCheck - DB): INSERT failed for other reason: ${insertError.message}`);
+                                // UI UPDATE: Reflect insert failure
+                                document.body.classList.remove('quota-met-today');
+                            }
+                        } else {
+                            // INSERT Successful
+                            console.log('DEBUG (QuotaCheck - DB): INSERT successful.');
+                            // *** UI UPDATE: Trust the success ***
+                            document.body.classList.add('quota-met-today');
+                        }
+                    } else {
+                        // Read found the record exists, quota is met. Ensure UI is correct.
+                        console.log("DEBUG (QuotaCheck - DB): Read found record exists and quota is met. Ensuring UI state.");
+                        // *** UI UPDATE: Trust the read (since no conflicting write needed) ***
+                        document.body.classList.add('quota-met-today');
+                    }
+                } else {
+                    // Quota is NOT met now. If record exists, delete it.
+                    if (recordExists) {
+                        console.log("DEBUG (QuotaCheck - DB): Quota NOT met, attempting to DELETE existing record...");
                         const { error: deleteError } = await supabaseClient
                             .from('daily_quotas_met')
                             .delete()
-                            .match({ user_id: currentUserId, quota_date: todayDateString }); // Use match for safety
+                            .match({ user_id: currentUserId, quota_date: todayDateString });
 
                         if (deleteError) {
                             console.error('Error deleting quota record:', deleteError);
+                            // Don't change UI state optimistically if delete fails
                         } else {
-                             console.log('DEBUG (QuotaCheck - DB): Daily quota record deleted successfully.');
+                            console.log('DEBUG (QuotaCheck - DB): DELETE successful.');
+                            // *** UI UPDATE: Trust the delete ***
+                            document.body.classList.remove('quota-met-today');
                         }
                     } else {
-                         console.log("DEBUG (QuotaCheck - DB): No change needed for DB quota status.");
+                        // Quota not met, record doesn't exist. Ensure UI is correct.
+                        console.log("DEBUG (QuotaCheck - DB): Quota NOT met, no record found. Ensuring UI state.");
+                         // *** UI UPDATE: Ensure class is removed ***
+                         document.body.classList.remove('quota-met-today');
                     }
-                    await updateQuotaMetVisualIndicator();
-console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.');
+                }
 
-                 } catch (quotaManageError) {
-                    console.error('Error during quota status management:', quotaManageError);
-                 }
-            } catch (fetchError) {
-                console.error('Error during quota check process:', fetchError);
+            } catch (outerError) { // Catch for the main try block
+                console.error('Error during overall quota check process:', outerError);
+                // Don't assume UI state on error, let subsequent reads handle it if possible
+                // or maybe remove class to be safe? Let's remove it.
+                document.body.classList.remove('quota-met-today');
             }
-            // Update visual indicator at the very end, reflecting the final state
-            await updateQuotaMetVisualIndicator();
-            console.log('DEBUG (QuotaCheck): Finished check and triggered visual update.');
+
+            // Final call to update display elements based on potentially more consistent (later) reads
+            console.log('DEBUG (QuotaCheck): Finished check logic, calling displayDailyQuotaStatus for UI text/bars.');
+            await displayDailyQuotaStatus(); // Update the text/progress bars
+            // We no longer need the final visual indicator update here, as the class is set above
         }
         
         // Create the debounced version of the quota check function
@@ -3942,94 +3912,113 @@ console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.
                         <p class="text-gray-700">Enter username to see quota status.</p>
                     </div>
                 `;
-                // Ensure class is removed if no user
-                // document.body.classList.remove('quota-met-today'); // Handled by updateQuotaMetVisualIndicator
                 return;
             }
 
             container.innerHTML = `<p class="text-gray-500">Loading today's goal status...</p>`; // Loading state
 
             try {
-                // --- Get Dynamic Quota Targets ---
-                 console.log('DEBUG (QuotaDisplay): Calculating dynamic quota targets...');
+                // --- 1. Get Dynamic Quota Targets ---
+                console.log('DEBUG (QuotaDisplay): Calculating dynamic quota targets...');
                 const { requiredVideosPerDay, requiredQuizzesPerDay, error: quotaError } = await calculateDynamicQuota();
 
                 if (quotaError) {
                     console.error(`DEBUG (QuotaDisplay): Failed to calculate dynamic quota: ${quotaError}.`);
-                     container.innerHTML = `
+                    container.innerHTML = `
                         <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <p class="text-red-700">Could not calculate dynamic goal. Please try again later.</p>
+                            <p class="text-red-700">Could not calculate dynamic goal: ${quotaError}. Please try again later.</p>
                         </div>
                     `;
-                    // await updateQuotaMetVisualIndicator(); // Update visual on error
                     return;
-                 }
-                 console.log(`DEBUG (QuotaDisplay): Dynamic targets: Videos=${requiredVideosPerDay}, Quizzes=${requiredQuizzesPerDay}`);
+                }
+                console.log(`DEBUG (QuotaDisplay): Dynamic targets: Videos=${requiredVideosPerDay}, Quizzes=${requiredQuizzesPerDay}`);
 
-
-                // Fetch Today's Completions
-                const now = new Date();
-                const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-                const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
-                const todayDateString = startOfDayUTC.toISOString().split('T')[0];
-
+                // --- 2. Get Today's Completions (Best Effort) ---
                 let videosToday = 0;
                 let quizzesToday = 0;
+                const now = new Date();
+                const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0, 0));
+                const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
 
                 try {
-                    const { data, error } = await supabaseClient
+                    const { data: completionsData, error: completionsError } = await supabaseClient
                         .from('completions')
                         .select('item_type')
                         .eq('user_id', currentUserId)
                         .gte('completed_at', startOfDayUTC.toISOString())
                         .lte('completed_at', endOfDayUTC.toISOString());
 
-                    if (error) {
-                        // Don't throw, just log and proceed with 0 counts
-                        console.error(`DEBUG (QuotaDisplay): Error fetching today's completions: ${error.message}`);
-                    } else {
-                        videosToday = data ? data.filter(i => i.item_type === 'video').length : 0;
-                        quizzesToday = data ? data.filter(i => i.item_type === 'quiz').length : 0;
+                    if (completionsError) {
+                        console.warn("DEBUG (QuotaDisplay): Error fetching today's completions for display:", completionsError.message);
+                        // Proceed with 0 counts for bars
+                    } else if (completionsData) {
+                        videosToday = completionsData.filter(i => i.item_type === 'video').length;
+                        quizzesToday = completionsData.filter(i => i.item_type === 'quiz').length;
                     }
-                    console.log(`DEBUG (QuotaDisplay): Today's completions: ${videosToday} videos, ${quizzesToday} quizzes.`);
+                    console.log(`DEBUG (QuotaDisplay): Display using completions: ${videosToday} videos, ${quizzesToday} quizzes.`);
+                } catch (fetchError) {
+                    console.error('DEBUG (QuotaDisplay): Exception fetching completions for display:', fetchError);
+                    // Proceed with 0 counts
+                }
 
-                } catch (fetchError) { // Catch potential exceptions
-                    console.error('DEBUG (QuotaDisplay): Exception fetching today\'s completions:', fetchError);
-                    // Continue with zero counts
-                 }
 
-                // Fetch Quota Met Status (from DB)
-                let isQuotaMetToday = false;
+                // --- 3. Check Supabase Quota Met Status (Best Effort Read) ---
+                let isQuotaMetInDB = false;
+                const todayDateString = startOfDayUTC.toISOString().split('T')[0];
+                let dbReadSucceeded = false;
+
                 try {
                     const { data: quotaStatusData, error: quotaStatusError } = await supabaseClient
                         .from('daily_quotas_met')
-                        .select('id')
+                        .select('id') // Use standard GET
                         .eq('user_id', currentUserId)
                         .eq('quota_date', todayDateString)
                         .maybeSingle();
 
                     if (quotaStatusError) {
-                       console.error(`DEBUG (QuotaDisplay): Error fetching quota status from DB: ${quotaStatusError.message}`);
-                       // Don't throw, just assume not met if error occurs
+                       console.warn(`DEBUG (QuotaDisplay): Error fetching quota status from DB for display: ${quotaStatusError.message}`);
+                       // dbReadSucceeded remains false
                     } else {
-                       isQuotaMetToday = (quotaStatusData !== null);
+                       isQuotaMetInDB = (quotaStatusData !== null);
+                       dbReadSucceeded = true; // Read was successful
                     }
-                     console.log(`DEBUG (QuotaDisplay): Quota met status from DB: ${isQuotaMetToday}`);
+                     console.log(`DEBUG (QuotaDisplay): Quota met status from DB read: ${isQuotaMetInDB} (Read success: ${dbReadSucceeded})`);
 
                  } catch (statusError) {
-                    console.error('DEBUG (QuotaDisplay): Exception fetching quota met status:', statusError);
-                    // Assume not met on exception
+                    console.error('DEBUG (QuotaDisplay): Exception fetching quota met status for display:', statusError);
+                     // dbReadSucceeded remains false
                  }
 
-                // --- Build HTML Output using DYNAMIC targets ---
+                // --- 4. Determine FINAL Display Status (NEW LOGIC) ---
+                // Trust the body class set by _performQuotaCheck if the DB read failed or seems inconsistent
+                const isBodyClassSet = document.body.classList.contains('quota-met-today');
+                let displayQuotaMet;
+
+                if (dbReadSucceeded) {
+                    // If DB read worked, trust it *unless* it contradicts the body class set by the write function
+                    if (isQuotaMetInDB && !isBodyClassSet) {
+                        console.warn("DEBUG (QuotaDisplay): DB says MET, but body class NOT set. Using DB status (Met).");
+                        displayQuotaMet = true;
+                    } else if (!isQuotaMetInDB && isBodyClassSet) {
+                        console.warn("DEBUG (QuotaDisplay): DB says NOT MET, but body class IS set. Using body class status (Met).");
+                        displayQuotaMet = true; // Trust the write/conflict outcome
+                    } else {
+                        // DB read and body class are consistent (or DB read succeeded and body class matches)
+                        displayQuotaMet = isQuotaMetInDB;
+                    }
+                } else {
+                    // DB read failed, rely solely on the body class set by _performQuotaCheck
+                    console.warn("DEBUG (QuotaDisplay): DB read failed or inconsistent, relying on body class.");
+                    displayQuotaMet = isBodyClassSet;
+                }
+                 console.log(`DEBUG (QuotaDisplay): Final determined display status: ${displayQuotaMet}`);
+
+
+                // --- 5. Build HTML ---
                 let statusHtml = `<h3 class="text-lg font-semibold mb-3 text-indigo-800">Today's Dynamic Goal Progress</h3>`;
 
-                // Video Progress Bar
-                const videoPercent = requiredVideosPerDay > 0
-                    ? Math.min(100, (videosToday / requiredVideosPerDay) * 100)
-                    : (videosToday > 0 ? 100 : 0); // Handle 0 target: 100% if any done today, else 0
-
-
+                // Video Progress Bar (same as before)
+                const videoPercent = requiredVideosPerDay > 0 ? Math.min(100, (videosToday / requiredVideosPerDay) * 100) : (videosToday > 0 ? 100 : 0);
                 statusHtml += `
                     <div class="mb-4">
                         <div class="flex justify-between mb-1">
@@ -4039,15 +4028,10 @@ console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.
                         <div class="w-full bg-gray-200 rounded-full h-2.5">
                             <div class="bg-blue-600 h-2.5 rounded-full" style="width: ${videoPercent}%"></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
 
-                // Quiz Progress Bar
-                const quizPercent = requiredQuizzesPerDay > 0
-                    ? Math.min(100, (quizzesToday / requiredQuizzesPerDay) * 100)
-                    : (quizzesToday > 0 ? 100 : 0); // Handle 0 target: 100% if any done today, else 0
-
-
+                // Quiz Progress Bar (same as before)
+                const quizPercent = requiredQuizzesPerDay > 0 ? Math.min(100, (quizzesToday / requiredQuizzesPerDay) * 100) : (quizzesToday > 0 ? 100 : 0);
                 statusHtml += `
                     <div class="mb-4">
                         <div class="flex justify-between mb-1">
@@ -4057,11 +4041,10 @@ console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.
                         <div class="w-full bg-gray-200 rounded-full h-2.5">
                             <div class="bg-green-600 h-2.5 rounded-full" style="width: ${quizPercent}%"></div>
                         </div>
-                    </div>
-                `;
+                    </div>`;
 
-                // Overall Status Message (using DB status)
-                if (isQuotaMetToday) {
+                // Overall Status Message (using the final 'displayQuotaMet' determination)
+                if (displayQuotaMet) { // Use the final determined status
                     statusHtml += `
                         <div class="flex items-center p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
                             <svg class="w-6 h-6 text-green-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
@@ -4070,11 +4053,10 @@ console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.
                             <p class="font-medium text-green-700">Met! Well done!</p>
                         </div>
                         <p class="mt-2 text-sm text-gray-500">
-                            Your dynamic quota completion for today has been recorded.
-                        </p>
-                    `;
+                           Your dynamic quota completion for today has been recorded.
+                        </p>`;
                 } else {
-                     statusHtml += `
+                    statusHtml += `
                         <div class="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg mb-3">
                             <svg class="w-6 h-6 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                 <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clip-rule="evenodd"></path>
@@ -4083,20 +4065,18 @@ console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.
                         </div>
                         <p class="mt-2 text-sm text-gray-500">
                             Complete approximately ${requiredVideosPerDay} videos and ${requiredQuizzesPerDay} quizzes today to meet your dynamic goal.
-                        </p>
-                    `;
+                        </p>`;
                 }
 
                 container.innerHTML = statusHtml;
 
             } catch (error) {
-                console.error('Error in displayDailyQuotaStatus:', error);
-                 // await updateQuotaMetVisualIndicator(); // Update visual on error
-                container.innerHTML = `
-                    <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
-                        <p class="text-red-700">Could not fetch quota status. Please try again later.</p>
-                    </div>
-                `;
+                console.error('Critical Error in displayDailyQuotaStatus:', error);
+                 container.innerHTML = `
+                     <div class="p-3 bg-red-50 border border-red-200 rounded-lg">
+                         <p class="text-red-700">Could not display quota status due to an error: ${error.message}</p>
+                     </div>
+                 `;
             }
         }
         
