@@ -335,8 +335,9 @@ async function updateQuotaMetVisualIndicator() {
         let attempts = 0;
         const maxAttempts = 3; // Try up to 3 times
         const retryDelay = 350; // Wait 350ms between retries
+        let foundRecord = false; // Add this new flag for tracking success
 
-        while (!data && attempts < maxAttempts) {
+        while (!foundRecord && attempts < maxAttempts) {
             attempts++;
             console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts}/${maxAttempts} - EXECUTING select...`);
 
@@ -346,23 +347,32 @@ async function updateQuotaMetVisualIndicator() {
                await sleep(retryDelay); // Uses the sleep function added in Step 1
             }
 
-            const response = await supabaseClient
+            // *** Use .select() instead of .maybeSingle() ***
+            const { data: queryResultData, error: queryResultError } = await supabaseClient
                 .from('daily_quotas_met')
-                .select('id')
+                .select('id', { head: false }) // Just select id
                 .eq('user_id', currentUserId)
-                .eq('quota_date', todayDateString)
-                .maybeSingle();
+                .eq('quota_date', todayDateString);
+                // No limit needed, we check the array
 
-            data = response.data;
-            error = response.error;
+            console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts} response:`, { data: queryResultData, error: queryResultError });
 
-            console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts} response:`, { data, error });
-
-            if (error) {
-                console.error(`GH_DEBUG (VisualIndicator): Error during SELECT query on attempt ${attempts}:`, error);
-                // Optionally break only on specific errors, otherwise allow retry? For now, break on any error.
-                break;
+            // Check for actual Supabase errors first
+            if (queryResultError) {
+                console.error(`GH_DEBUG (VisualIndicator): Error during SELECT query on attempt ${attempts}:`, queryResultError);
+                error = queryResultError; // Store the error to handle after the loop
+                break; // Stop retrying on error
             }
+
+            // Check if the query returned any rows (success case)
+            if (queryResultData && queryResultData.length > 0) {
+                console.log(`GH_DEBUG (VisualIndicator): Attempt ${attempts} found ${queryResultData.length} record(s). Setting foundRecord flag.`);
+                foundRecord = true; // Set flag indicating success
+                data = queryResultData[0]; // Store the first record's data (like the ID)
+                // Loop will terminate because foundRecord is now true
+            }
+            // If queryResultData is null or empty, and no error, the loop continues (if attempts remain)
+            // The wait condition is handled at the start of the loop for attempts > 1
 
             // No need to wait if data WAS found or if it was the last attempt
             // The loop condition handles stopping
@@ -373,12 +383,13 @@ async function updateQuotaMetVisualIndicator() {
         if (error) {
              console.error('GH_DEBUG (VisualIndicator): Final check - Error occurred during SELECT attempts.');
              document.body.classList.remove('quota-met-today');
-        } else if (data) {
-            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT found data. Record ID:', data.id, 'Applying class.');
+        } else if (foundRecord) {
+            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT found record after retries. Applying class.');
+            // 'data' variable should hold the record (e.g., data.id) if needed for logging
             document.body.classList.add('quota-met-today');
         } else {
-            // data is null and no error occurred after maxAttempts
-            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT did NOT find data after all retries. Removing class.');
+            // Loop finished all attempts without finding a record and without error
+            console.log('GH_DEBUG (VisualIndicator): Final check - SELECT did NOT find record after all retries. Removing class.');
             document.body.classList.remove('quota-met-today');
         }
 
