@@ -301,6 +301,17 @@
     <script>
                 // Utility function for a simple delay
 // Utility function for a simple delay (Needs to be defined)
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+};
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -323,7 +334,7 @@ async function updateQuotaMetVisualIndicator() {
         let error = null;
         let attempts = 0;
         const maxAttempts = 3; // Try up to 3 times
-        const retryDelay = 350; // Wait 350ms between retries (slightly increased)
+        const retryDelay = 350; // Wait 350ms between retries
 
         while (!data && attempts < maxAttempts) {
             attempts++;
@@ -332,7 +343,7 @@ async function updateQuotaMetVisualIndicator() {
             // Don't wait before the FIRST attempt, only between retries
             if (attempts > 1) {
                console.log(`GH_DEBUG (VisualIndicator): Waiting ${retryDelay}ms before retry ${attempts}...`);
-               await sleep(retryDelay);
+               await sleep(retryDelay); // Uses the sleep function added in Step 1
             }
 
             const response = await supabaseClient
@@ -340,7 +351,7 @@ async function updateQuotaMetVisualIndicator() {
                 .select('id')
                 .eq('user_id', currentUserId)
                 .eq('quota_date', todayDateString)
-                .maybeSingle(); // Keep using maybeSingle
+                .maybeSingle();
 
             data = response.data;
             error = response.error;
@@ -799,7 +810,7 @@ async function displayGlobalBookmarkIndicator() {
                     // If error is null, the operation was likely successful on Supabase's side
                     console.log(`DEBUG: >>> Completion save to Supabase seems successful: ${itemType} - ${itemIdentifier}`);
                     // Call the next step ONLY on success
-                    checkDailyQuotaCompletion(); // Moved inside the 'else' block
+                    debouncedQuotaCheck(); // Using debounced version without await
                 }
 
             } catch (error) {
@@ -1978,7 +1989,7 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             }
             
             // Call placeholder function for checking local storage quota
-            checkDailyQuotaCompletion();
+            debouncedQuotaCheck();
         }
         
         // Function to mark a specific quiz as completed or not completed
@@ -2018,23 +2029,21 @@ Thank you for helping me prepare for my AP Statistics exam!`;
             }
             
             // Call placeholder function for checking local storage quota
-            checkDailyQuotaCompletion();
+            debouncedQuotaCheck();
         }
         
         
         // Function to check if daily quota has been met and record it in Supabase
-        async function checkDailyQuotaCompletion() {
+        async function _performQuotaCheck() {
+            console.log("DEBUG (_performQuotaCheck): Debounced check running...");
             if (!currentUserId) {
-                console.log('DEBUG (QuotaCheck): Cannot check daily quota without user ID.');
-                // Remove class if no user is logged in (redundant with updateQuotaMetVisualIndicator, but safe)
-                // document.body.classList.remove('quota-met-today');
-                await updateQuotaMetVisualIndicator(); // Add await here too
-                return;
-            }
+        console.log('DEBUG (QuotaCheck): Cannot check daily quota without user ID.');
+        await updateQuotaMetVisualIndicator(); // Still update visual even if no user check done
+        return;
+    }
 
-            // --- Get Dynamic Quota Targets ---
-            console.log('DEBUG (QuotaCheck): Calculating dynamic quota targets...');
-            const { requiredVideosPerDay, requiredQuizzesPerDay, error: quotaError } = await calculateDynamicQuota();
+    console.log('DEBUG (QuotaCheck): Calculating dynamic quota targets...');
+    const { requiredVideosPerDay, requiredQuizzesPerDay, error: quotaError } = await calculateDynamicQuota();
 
             if (quotaError) {
                 console.error(`DEBUG (QuotaCheck): Failed to calculate dynamic quota: ${quotaError}. Aborting check.`);
@@ -2047,21 +2056,19 @@ Thank you for helping me prepare for my AP Statistics exam!`;
 
             // Get today's date boundaries using UTC
             const now = new Date();
-            const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
-            const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
-            const todayDateString = startOfDayUTC.toISOString().split('T')[0];
+    const startOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+    const endOfDayUTC = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 23, 59, 59, 999));
+    const todayDateString = startOfDayUTC.toISOString().split('T')[0];
 
-            console.log(`DEBUG: Checking completions for UTC date ${todayDateString} from ${startOfDayUTC.toISOString()} to ${endOfDayUTC.toISOString()}`);
+    console.log(`DEBUG: Checking completions for UTC date ${todayDateString} from ${startOfDayUTC.toISOString()} to ${endOfDayUTC.toISOString()}`);
 
-            try {
-                // Query Supabase for today's completions
-                const { data, error } = await supabaseClient
-                    .from('completions')
-                    .select('item_type')
-                    .eq('user_id', currentUserId)
-                    .gte('completed_at', startOfDayUTC.toISOString())
-                    .lte('completed_at', endOfDayUTC.toISOString());
-
+    try {
+        const { data, error } = await supabaseClient
+            .from('completions')
+            .select('item_type')
+            .eq('user_id', currentUserId)
+            .gte('completed_at', startOfDayUTC.toISOString())
+            .lte('completed_at', endOfDayUTC.toISOString());
                 if (error) {
                     console.error('Error fetching today\'s completions:', error);
                      await updateQuotaMetVisualIndicator(); // Update visual on error
@@ -2081,15 +2088,38 @@ Thank you for helping me prepare for my AP Statistics exam!`;
 
                 // Query Existing Status and Update Logic
                 try {
-                    const quotaStatusResult = await supabaseClient
-                        .from('daily_quotas_met')
-                        .select('id')
-                        .eq('user_id', currentUserId)
-                        .eq('quota_date', todayDateString)
-                        .maybeSingle();
+                    let quotaStatusResult = null;
+                    let attempts = 0;
+                    const maxAttempts = 3; // Try up to 3 times
+                    const retryDelay = 350; // Wait 350ms between retries
+
+                    while (attempts < maxAttempts) {
+                        attempts++;
+                        console.log(`DEBUG (QuotaCheck): Status check attempt ${attempts}/${maxAttempts}`);
+                        
+                        // Add delay between retries
+                        if (attempts > 1) {
+                            console.log(`DEBUG (QuotaCheck): Waiting ${retryDelay}ms before retry...`);
+                            await sleep(retryDelay);
+                        }
+                        
+                        quotaStatusResult = await supabaseClient
+                            .from('daily_quotas_met')
+                            .select('id')
+                            .eq('user_id', currentUserId)
+                            .eq('quota_date', todayDateString)
+                            .maybeSingle();
+                            
+                        if (!quotaStatusResult.error) {
+                            console.log(`DEBUG (QuotaCheck): Status check successful on attempt ${attempts}`);
+                            break; // Exit loop on success
+                        } else {
+                            console.error(`DEBUG (QuotaCheck): Error on attempt ${attempts}:`, quotaStatusResult.error);
+                        }
+                    }
 
                     if (quotaStatusResult.error) {
-                        console.error('Error checking quota status:', quotaStatusResult.error);
+                        console.error('Error checking quota status after all retries:', quotaStatusResult.error);
                         await updateQuotaMetVisualIndicator(); // Ensure visual is updated on error
                         return; // Don't proceed if we can't check current status
                     }
@@ -2143,6 +2173,26 @@ console.log('DEBUG (QuotaCheck): Triggered visual update at the end of function.
             // Update visual indicator at the very end, reflecting the final state
             await updateQuotaMetVisualIndicator();
             console.log('DEBUG (QuotaCheck): Finished check and triggered visual update.');
+        }
+        
+        // Create the debounced version of the quota check function
+        // It will wait 750ms after the *last* call before executing _performQuotaCheck
+        const debouncedQuotaCheck = debounce(_performQuotaCheck, 750);
+        
+        // Create a debounced version of the quota check function (500ms wait time)
+        const _debouncedQuotaCheck = debounce(_performQuotaCheck, 500);
+        
+        // Function that external code calls to trigger a quota check
+        // This implementation uses the debounced version to prevent rapid multiple calls
+        async function _triggerDebouncedQuotaCheck() {
+            console.log('DEBUG: checkDailyQuotaCompletion called, using debounced implementation');
+            _debouncedQuotaCheck();
+            // This returns immediately while the debounced function waits before executing
+        }
+        
+        // Alias function for backward compatibility
+        async function checkDailyQuotaCompletion() {
+            return _triggerDebouncedQuotaCheck();
         }
         
         // Function to mark all videos and quizzes in a topic as completed
