@@ -783,22 +783,43 @@ const ALL_UNITS_DATA = [
     ]
   },
   {
-    id: "4-3",
-    name: "Topic 4.3",
-    description: "Introduction to Probability",
+    id: "4-1",
+    name: "Topic 4.1",
+    description: "Introducing Statistics: Random and Non-Random Patterns?",
     videos: [
         {
-            url: "https://apclassroom.collegeboard.org/d/3naih8n3ar?sui=33,4",
-            altUrl: "https://drive.google.com/file/d/1eAYcRNceHy01t7bmARB3vtTDZnNNqmOV/view?usp=drive_link",
+            url: "https://apclassroom.collegeboard.org/d/7vn9faj6p9?sui=33,4",
+            altUrl: "https://drive.google.com/file/d/1lNfQZIrnUbG6JkCzw4wB-kcYNHpckwc-/view?usp=drive_link",
+            completed: false,
+            completionDate: null
+        }
+    ],
+    quizzes: [],
+    current: false
+  },
+  {
+    id: "4-2",
+    name: "Topic 4.2",
+    description: "Estimating Probabilities Using Simulation",
+    videos: [
+        {
+            url: "https://apclassroom.collegeboard.org/d/lbulj7eskd?sui=33,4",
+            altUrl: "https://drive.google.com/file/d/1qdvG72sMnfrQAavaoLV7x4wa1o_uE5Eh/view?usp=drive_link",
+            completed: false,
+            completionDate: null
+        },
+        {
+            url: "https://apclassroom.collegeboard.org/d/v5phdup7pz?sui=33,4",
+            altUrl: "https://drive.google.com/file/d/1ksMiLGYx5cFCg1-Zosq4m_D_mlt2M7qo/view?usp=drive_link",
             completed: false,
             completionDate: null
         }
     ],
     quizzes: [
         {
-            questionPdf: "pdfs/unit4/4.3_quiz.pdf",
-            answersPdf: "pdfs/unit4/4.3_answers.pdf",
-            quizId: "4-3_q1",
+            questionPdf: "pdfs/unit4/unit4_section4.2_quiz.pdf",
+            answersPdf: "pdfs/unit4/unit4_section4.2_answers.pdf",
+            quizId: "4-2_q1",
             completed: false,
             completionDate: null
         }
